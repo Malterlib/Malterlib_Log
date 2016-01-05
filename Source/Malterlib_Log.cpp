@@ -485,6 +485,40 @@ namespace NMib
 					<< 	(_nCats ? _pCats[_nCats - 1] : "")
 					<<	_Message);
 		}
+		
+		void fg_LogTo_StdErr
+			(
+				void* _pContext // Unused
+				, mint _ThreadID
+				, NTime::CTime const& _Time
+				, ESeverity _Sev
+				, 	CLogStr const& _Message
+				, char const* const* _pCats
+				, mint _nCats
+				, char const* const* _pOps
+				, mint _nOps
+				, CLogLocationTag const& _Loc
+			)
+		{
+			NTime::CTimeConvert::CDateTime DateTime;
+			NTime::CTimeConvert(_Time).f_ExtractDateTime(DateTime);
+
+			DMibConErrOut
+				(
+					"[{}-{sj2,sf0}-{sj2,sf0} {sj2,sf0}:{sj2,sf0}:{sj2,sf0}.{fr1,fe3}] ({sj8}): {sj8}: {}{\n}"
+					, DateTime.m_Year
+					<< DateTime.m_Month
+					<< DateTime.m_DayOfMonth
+					<< DateTime.m_Hour
+					<< DateTime.m_Minute
+					<< DateTime.m_Second
+					<< DateTime.m_Fraction
+					<< fg_GetSeverityName(_Sev)
+					<<  (_nCats ? _pCats[_nCats - 1] : "")
+					<< _Message
+				)
+			;
+		}
 
 		CLogFile::CLogFile()
 			: m_bFilenameUsedTime(false)

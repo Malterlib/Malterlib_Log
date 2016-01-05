@@ -25,6 +25,19 @@ namespace NMib
 				,	CLogLocationTag const& _Loc
 				);
 
+		void fg_LogTo_StdErr(
+					void* _pContext // Unused
+				,	mint _ThreadID
+				,	NTime::CTime const& _Time
+				,	ESeverity _Sev
+				, 	CLogStr const& _Message
+				,	char const* const* _pCats
+				,	mint _nCats
+				,	char const* const* _pOps
+				,	mint _nOps
+				,	CLogLocationTag const& _Loc
+				);
+
 		struct CLogFile
 		{			
 			CLogStr m_Filename;
