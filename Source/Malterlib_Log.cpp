@@ -39,8 +39,6 @@ namespace NMib
 
 		struct CLogger::CDetails
 		{
-
-
 			struct CDestination
 			{
 				FLogDestination* m_pfDestination;
@@ -50,18 +48,17 @@ namespace NMib
 
 			struct CThreadInfo
 			{
-				NContainer::TCVector<char const*, NMem::CAllocator_NonTrackedHeap> m_lCategoryStack;
-				NContainer::TCVector<char const*, NMem::CAllocator_NonTrackedHeap> m_lOperationStack;
+				DMibListLinkDS_List(CSysLogCatScope, m_Link) m_CategoryStack;
+				DMibListLinkDS_List(CSysLogOpScope, m_Link) m_OperationStack;
 				NContainer::TCVector<CDestination, NMem::CAllocator_NonTrackedHeap> m_lDestinations;
 			};
 
 			NThread::TCThreadLocal<CThreadInfo, NMem::CAllocator_NonTrackedHeap> mp_ThreadInfo;
 
-			NThread::CMutual mp_GlobalDestLock; // TODO: Do without? Require global dests set at startup?
+			NThread::CMutualManyRead mp_GlobalDestLock; // TODO: Do without? Require global dests set at startup?
 			NContainer::TCVector<CDestination, NMem::CAllocator_NonTrackedHeap> mp_lGlobalDestinations;
 
 			NContainer::TCVector< NPtr::TCUniquePointer<CLogFile> > mp_lConfigLogFiles;
-
 		};
 
 		CLogger::CLogger()
@@ -273,34 +270,34 @@ namespace NMib
 			(*mp_pD->mp_ThreadInfo).m_lDestinations.f_Pop();
 		}
 
-		void CLogger::f_PushCategoryScope(char const* _Category)
+		void CLogger::f_PushCategoryScope(CSysLogCatScope &_Scope)
 		{
-			(*mp_pD->mp_ThreadInfo).m_lCategoryStack.f_Push(_Category);
+			(*mp_pD->mp_ThreadInfo).m_CategoryStack.f_InsertFirst(_Scope);
 		}
 
-		void CLogger::f_PopCategoryScope()
+		void CLogger::f_PopCategoryScope(CSysLogCatScope &_Scope)
 		{
-			(*mp_pD->mp_ThreadInfo).m_lCategoryStack.f_Pop();
+			(*mp_pD->mp_ThreadInfo).m_CategoryStack.f_Remove(_Scope);
 		}
 
-		void CLogger::f_PushOperationScope(char const* _Op)
+		void CLogger::f_PushOperationScope(CSysLogOpScope &_Scope)
 		{
-			(*mp_pD->mp_ThreadInfo).m_lOperationStack.f_Push(_Op);
+			(*mp_pD->mp_ThreadInfo).m_OperationStack.f_InsertFirst(_Scope);
 		}
 
-		void CLogger::f_PopOperationScope()
+		void CLogger::f_PopOperationScope(CSysLogOpScope &_Scope)
 		{
-			(*mp_pD->mp_ThreadInfo).m_lOperationStack.f_Pop();
+			(*mp_pD->mp_ThreadInfo).m_OperationStack.f_Remove(_Scope);
 		}
 
 		void CLogger::f_Log(CLogLocationTag _Loc, ESeverity _Sev, CLogStr const& _Text)
 		{
-			NTime::CTime LogTime = NTime::CTime::fs_NowLocal();
+			NTime::CTime LogTime = NTime::CTime::fs_NowUTC();
 
 			mint ThreadID = NSys::fg_Thread_GetCurrentUID();
 
-			auto const& lCats = (*mp_pD->mp_ThreadInfo).m_lCategoryStack;
-			auto const& lOps = (*mp_pD->mp_ThreadInfo).m_lOperationStack;
+			auto const &Cats = (*mp_pD->mp_ThreadInfo).m_CategoryStack;
+			auto const &Ops = (*mp_pD->mp_ThreadInfo).m_OperationStack;
 
 			auto fl_SendToDests =
 				[&](NContainer::TCVector<CDetails::CDestination, NMem::CAllocator_NonTrackedHeap>& _lDests)
@@ -314,10 +311,8 @@ namespace NMib
 									,	LogTime
 									,	_Sev
 									,	_Text
-									,	lCats.f_GetArray()
-									,	lCats.f_GetLen()
-									,	lOps.f_GetArray()
-									,	lOps.f_GetLen()
+									,	Cats
+									,	Ops
 									,	_Loc
 								)
 							)
@@ -328,10 +323,8 @@ namespace NMib
 								,	LogTime
 								,	_Sev
 								,	_Text
-								,	lCats.f_GetArray()
-								,	lCats.f_GetLen()
-								,	lOps.f_GetArray()
-								,	lOps.f_GetLen()
+								,	Cats
+								,	Ops
 								,	_Loc
 								);
 						}
@@ -343,7 +336,7 @@ namespace NMib
 			fl_SendToDests( (*mp_pD->mp_ThreadInfo).m_lDestinations );
 
 			{
-				DMibLock(mp_pD->mp_GlobalDestLock);
+				DMibLockRead(mp_pD->mp_GlobalDestLock);
 				fl_SendToDests(mp_pD->mp_lGlobalDestinations);
 			}
 		}
@@ -355,44 +348,47 @@ namespace NMib
 			,	NTime::CTime const& _Time
 			,	ESeverity _Sev
 			, 	CLogStr const& _Message
-			,	char const* const* _pCats
-			,	mint _nCats
-			,	char const* const* _pOps
-			,	mint _nOps
+			,	DMibListLinkDS_List(CSysLogCatScope, m_Link) const &_Categories
+			,	DMibListLinkDS_List(CSysLogOpScope, m_Link) const &_Operations
 			,	CLogLocationTag const& _Loc
 			)
 		{
-			if (	m_Severity != ESeverity_None
-				&&	(_Sev & m_Severity) == 0)
+			if (m_Severity != ESeverity_None && (_Sev & m_Severity) == 0)
 				return false;
 
-			if (	!m_Category.f_IsEmpty())
+			if (!m_Category.f_IsEmpty())
 			{
-				mint iC;
-				for (iC = 0; iC < _nCats; ++iC)
+				bool bFound = false;
+				for (auto &Category : _Categories)
 				{
-					if (m_Category.f_CmpNoCase(_pCats[iC]) == 0)
+					if (m_Category.f_CmpNoCase(Category.m_pCategory) == 0)
+					{
+						bFound = true;
 						break;
+					}
 				}
 
-				if (iC == _nCats)
+				if (!bFound)
 					return false;
 			}
 
-			if (	!m_Operation.f_IsEmpty())
+			if (!m_Operation.f_IsEmpty())
 			{
-				mint iO;
-				for (iO = 0; iO < _nOps; ++iO)
+				bool bFound = false;
+				for (auto &Operation : _Operations)
 				{
-					if (m_Operation.f_CmpNoCase(_pOps[iO]) == 0)
+					if (m_Operation.f_CmpNoCase(Operation.m_pOperation) == 0)
+					{
+						bFound = true;
 						break;
+					}
 				}
 
-				if (iO == _nOps)
+				if (!bFound)
 					return false;
 			}
 
-			if (	!m_File.f_IsEmpty())
+			if (!m_File.f_IsEmpty())
 			{
 				mint FileLen = m_File.f_GetLen();
 				mint LocFileLen = NStr::fg_StrLen(_Loc.m_pFile);
@@ -411,7 +407,7 @@ namespace NMib
 
 		// Global
 
-		char const* fg_GetSeverityName(ESeverity _Sev)
+		char const *fg_GetSeverityName(ESeverity _Sev)
 		{
 			switch(_Sev)
 			{
@@ -468,22 +464,29 @@ namespace NMib
 				,	NTime::CTime const& _Time
 				,	ESeverity _Sev
 				, 	CLogStr const& _Message
-				,	char const* const* _pCats
-				,	mint _nCats
-				,	char const* const* _pOps
-				,	mint _nOps
+				,	DMibListLinkDS_List(CSysLogCatScope, m_Link) const &_Categories
+				,	DMibListLinkDS_List(CSysLogOpScope, m_Link) const &_Operations
 				,	CLogLocationTag const& _Loc
 				)
 		{
 			NTime::CTimeConvert::CDateTime DateTime;
-			NTime::CTimeConvert(_Time).f_ExtractDateTime(DateTime);
+			NTime::CTimeConvert(_Time.f_ToLocal()).f_ExtractDateTime(DateTime);
 
-			DMibTrace("[{}-{sj2,sf0}-{sj2,sf0} {sj2,sf0}:{sj2,sf0}:{sj2,sf0}] ({sj8}): {sj8}: {}" DMibNewLine
-				, 		DateTime.m_Year << DateTime.m_Month << DateTime.m_DayOfMonth
-					<<	DateTime.m_Hour << DateTime.m_Minute << DateTime.m_Second
-					<< 	fg_GetSeverityName(_Sev)
-					<< 	(_nCats ? _pCats[_nCats - 1] : "")
-					<<	_Message);
+			DMibTrace
+				(
+					"{}-{sj2,sf0}-{sj2,sf0} {sj2,sf0}:{sj2,sf0}:{sj2,sf0}.{fr1,fe3} {sj32} {sj10} {}{\n}"
+					, DateTime.m_Year
+					<< DateTime.m_Month
+					<< DateTime.m_DayOfMonth
+					<< DateTime.m_Hour
+					<< DateTime.m_Minute
+					<< DateTime.m_Second
+					<< DateTime.m_Fraction
+					<< (_Categories.f_IsEmpty() ? NStr::CStrNonTracked() : NStr::fg_Format<NStr::CStrNonTracked>("<{}>", _Categories.f_GetFirst()->m_pCategory))
+					<< NStr::fg_Format<NStr::CStrNonTracked>("[{}]", fg_GetSeverityName(_Sev))
+					<< _Message
+				)
+			;
 		}
 		
 		void fg_LogTo_StdErr
@@ -492,20 +495,18 @@ namespace NMib
 				, mint _ThreadID
 				, NTime::CTime const& _Time
 				, ESeverity _Sev
-				, 	CLogStr const& _Message
-				, char const* const* _pCats
-				, mint _nCats
-				, char const* const* _pOps
-				, mint _nOps
+				, CLogStr const& _Message
+				, DMibListLinkDS_List(CSysLogCatScope, m_Link) const &_Categories
+				, DMibListLinkDS_List(CSysLogOpScope, m_Link) const &_Operations
 				, CLogLocationTag const& _Loc
 			)
 		{
 			NTime::CTimeConvert::CDateTime DateTime;
-			NTime::CTimeConvert(_Time).f_ExtractDateTime(DateTime);
+			NTime::CTimeConvert(_Time.f_ToLocal()).f_ExtractDateTime(DateTime);
 
 			DMibConErrOut
 				(
-					"[{}-{sj2,sf0}-{sj2,sf0} {sj2,sf0}:{sj2,sf0}:{sj2,sf0}.{fr1,fe3}] ({sj8}): {sj8}: {}{\n}"
+					"{}-{sj2,sf0}-{sj2,sf0} {sj2,sf0}:{sj2,sf0}:{sj2,sf0}.{fr1,fe3} {sj32} {sj10} {}{\n}"
 					, DateTime.m_Year
 					<< DateTime.m_Month
 					<< DateTime.m_DayOfMonth
@@ -513,8 +514,8 @@ namespace NMib
 					<< DateTime.m_Minute
 					<< DateTime.m_Second
 					<< DateTime.m_Fraction
-					<< fg_GetSeverityName(_Sev)
-					<<  (_nCats ? _pCats[_nCats - 1] : "")
+					<< (_Categories.f_IsEmpty() ? NStr::CStrNonTracked() : NStr::fg_Format<NStr::CStrNonTracked>("<{}>", _Categories.f_GetFirst()->m_pCategory))
+					<< NStr::fg_Format<NStr::CStrNonTracked>("[{}]", fg_GetSeverityName(_Sev))
 					<< _Message
 				)
 			;
@@ -666,18 +667,17 @@ namespace NMib
 			}
 		}
 
-		void fg_LogTo_File(
-					void* _pContext // CLogFile*
-				,	mint _ThreadID
-				,	NTime::CTime const& _Time
-				,	ESeverity _Sev
-				, 	CLogStr const& _Message
-				,	char const* const* _pCats
-				,	mint _nCats
-				,	char const* const* _pOps
-				,	mint _nOps
-				,	CLogLocationTag const& _Loc
-				)
+		void fg_LogTo_File
+			(
+				void* _pContext // CLogFile*
+				, mint _ThreadID
+				, NTime::CTime const& _Time
+				, ESeverity _Sev
+				, CLogStr const& _Message
+				, DMibListLinkDS_List(CSysLogCatScope, m_Link) const &_Categories
+				, DMibListLinkDS_List(CSysLogOpScope, m_Link) const &_Operations
+				, CLogLocationTag const& _Loc
+			)
 		{
 			CLogFile* pLogFile = (CLogFile*)_pContext;
 
@@ -687,20 +687,28 @@ namespace NMib
 			NFile::CFile* pFile = &pLogFile->m_File;
 
 			NTime::CTimeConvert::CDateTime DateTime;
-			NTime::CTimeConvert(_Time).f_ExtractDateTime(DateTime);
+			NTime::CTimeConvert(_Time.f_ToLocal()).f_ExtractDateTime(DateTime);
 
-			CLogStr Text = CLogStr::CFormat("{sj32}({sj4}) : #{nh,sj8,sf0} : [{}-{sj2,sf0}-{sj2,sf0} {sj2,sf0}:{sj2,sf0}:{sj2,sf0}] : ({sj8}) : {sj8} : {}" DMibNewLine)
-					<<	fg_ExtractFileName(_Loc.m_pFile)
-					<<	_Loc.m_Line
-					<<	_ThreadID
-				 	<<	DateTime.m_Year << DateTime.m_Month << DateTime.m_DayOfMonth
-					<<	DateTime.m_Hour << DateTime.m_Minute << DateTime.m_Second
-					<< 	fg_GetSeverityName(_Sev)
-					<< 	(_nCats ? _pCats[_nCats - 1] : "")
-					<<	_Message;
+			CLogStr Text = NStr::fg_Format<CLogStr>
+				(
+					DMibPFileLineFormat " #{nh,sj8,sf0} : {}-{sj2,sf0}-{sj2,sf0} {sj2,sf0}:{sj2,sf0}:{sj2,sf0}.{fr1,fe3} {sj32} {sj10} {}{\n}"
+					, fg_ExtractFileName(_Loc.m_pFile)
+					, _Loc.m_Line
+					, _ThreadID
+					, DateTime.m_Year
+					, DateTime.m_Month
+					, DateTime.m_DayOfMonth
+					, DateTime.m_Hour
+					, DateTime.m_Minute
+					, DateTime.m_Second
+					, DateTime.m_Fraction
+					, (_Categories.f_IsEmpty() ? NStr::CStrNonTracked() : NStr::fg_Format<NStr::CStrNonTracked>("<{}>", _Categories.f_GetFirst()->m_pCategory))
+					, NStr::fg_Format<NStr::CStrNonTracked>("[{}]", fg_GetSeverityName(_Sev))
+					, _Message
+				)
+			;
 
 			pFile->f_Write(Text.f_GetStr(), Text.f_GetLen() * sizeof(CLogStr::CChar));
-
 			pFile->f_Flush(false); // Optional?
 		}
 #endif

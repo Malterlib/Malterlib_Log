@@ -178,6 +178,36 @@ namespace NMib
 		
 #if DMibSysLogSeverities
 
+		class CLogger;
+		class CNullLogger;
+		
+		#if (DMibSysLogSeverities) != 0
+			typedef CLogger CSystemLogger;
+		#else
+			typedef CNullLogger CSystemLogger;
+		#endif
+
+		struct CSysLogCatScope
+		{
+			inline CSysLogCatScope(CSystemLogger &_SysLog, char const *_pCategory);
+			inline ~CSysLogCatScope();
+			
+			CSystemLogger &m_SysLog;
+			ch8 const *m_pCategory;
+			DMibListLinkDS_Link(CSysLogCatScope, m_Link);
+		};
+
+		struct CSysLogOpScope
+		{
+			CSystemLogger &m_SysLog;
+
+			inline CSysLogOpScope(CSystemLogger &_SysLog, char const *_pOperation);
+			inline ~CSysLogOpScope();
+			
+			ch8 const *m_pOperation;
+			DMibListLinkDS_Link(CSysLogOpScope, m_Link);
+		};
+
 		struct CLogLocationTag
 		{
 			char const* m_pFile;
@@ -205,10 +235,8 @@ namespace NMib
 				,	NTime::CTime const& _Time
 				,	ESeverity _Sev
 				, 	CLogStr const& _Message
-				,	char const* const* _pCats
-				,	mint _nCats
-				,	char const* const* _pOps
-				,	mint _nOps
+				,	DMibListLinkDS_List(CSysLogCatScope, m_Link) const &_Categories
+				,	DMibListLinkDS_List(CSysLogOpScope, m_Link) const &_Operations
 				,	CLogLocationTag const& _Loc
 				);
 
@@ -260,10 +288,8 @@ namespace NMib
 				,	NTime::CTime const& _Time
 				,	ESeverity _Sev
 				, 	CLogStr const& _Message
-				,	char const* const* _pCats
-				,	mint _nCats
-				,	char const* const* _pOps
-				,	mint _nOps
+				,	DMibListLinkDS_List(CSysLogCatScope, m_Link) const &_Categories
+				,	DMibListLinkDS_List(CSysLogOpScope, m_Link) const &_Operations
 				,	CLogLocationTag const& _Loc
 			);
 		};
@@ -301,11 +327,11 @@ namespace NMib
 			void f_PushDestination(FLogDestination* _pFDest, void* _pContext, CLogFilter&& _Filter);
 			void f_PopDestination();
 
-			void f_PushCategoryScope(char const* _Category);
-			void f_PopCategoryScope();
+			void f_PushCategoryScope(CSysLogCatScope &_Scope);
+			void f_PopCategoryScope(CSysLogCatScope &_Scope);
 
-			void f_PushOperationScope(char const* _Op);
-			void f_PopOperationScope();
+			void f_PushOperationScope(CSysLogOpScope &_Scope);
+			void f_PopOperationScope(CSysLogOpScope &_Scope);
 
 			void f_Log(CLogLocationTag _Loc, ESeverity _Sev, CLogStr const& _Str);
 
@@ -340,11 +366,11 @@ namespace NMib
 			void f_PushDestination(FLogDestination* _pFDest, void* _pContext, CLogFilter&& _Filter) {}
 			void f_PopDestination() {}
 
-			void f_PushCategoryScope(char const* _Category) {}
-			void f_PopCategoryScope() {}
+			void f_PushCategoryScope(CSysLogCatScope &_Scope);
+			void f_PopCategoryScope(CSysLogCatScope &_Scope);
 
-			void f_PushOperationScope(char const* _Op) {}
-			void f_PopOperationScope() {}
+			void f_PushOperationScope(CSysLogOpScope &_Scope);
+			void f_PopOperationScope(CSysLogOpScope &_Scope);
 
 			void f_Log(CLogLocationTag _Loc, ESeverity _Sev, CLogStr const& _Str);
 
@@ -359,44 +385,6 @@ namespace NMib
 			void f_PushOperationScope(NStr::CStr const& _Str);
 			void f_PushOperationScope(NStr::CWStr const& _Str);
 			void f_PushOperationScope(NStr::CUStr const& _Str);
-		};
-
-		#if (DMibSysLogSeverities) != 0
-			typedef CLogger CSystemLogger;
-		#else
-			typedef CNullLogger CSystemLogger;
-		#endif
-
-		struct CSysLogCatScope
-		{
-			CSystemLogger& m_SysLog;
-
-			CSysLogCatScope(CSystemLogger& _SysLog, char const* _Cat)
-				: m_SysLog(_SysLog)
-			{
-				m_SysLog.f_PushCategoryScope(_Cat);
-			}
-
-			~CSysLogCatScope()
-			{
-				m_SysLog.f_PopCategoryScope();
-			}
-		};
-
-		struct CSysLogOpScope
-		{
-			CSystemLogger& m_SysLog;
-
-			CSysLogOpScope(CSystemLogger& _SysLog, char const* _Op)
-				: m_SysLog(_SysLog)
-			{
-				m_SysLog.f_PushOperationScope(_Op);
-			}
-
-			~CSysLogOpScope()
-			{
-				m_SysLog.f_PopOperationScope();
-			}
 		};
 
 		template<typename tf_CMessage, typename... tfp_CArgs>
@@ -484,9 +472,12 @@ namespace NMib
 		#define DMibLogCatEx(_Tag, _Category) DMibLogCategoryEx(_Tag, _Category)
 		#define DMibLogOp(_Op) DMibLogOperation(_Op)
 		#define DMibLogOpEx(_Tag, _Op) DMibLogOperationEx(_Tag, _Op)
+		
+		#define DMibLogWithCategory(d_Category, d_Severity, ...) {DMibLogCategory(d_Category); DMibLog(d_Severity, __VA_ARGS__);}
 
 		#ifndef DMibPNoShortCuts
 			#define DLog(_Sev, ...) DMibLog(_Sev, __VA_ARGS__)
+			#define DLogWithCategory DMibLogWithCategory
 
 			#define DLogCategory(_Category) DMibLogCategory(_Category)
 			#define DLogCategoryEx(_Tag, _Category) DMibLogCategoryEx(_Tag, _Category)
@@ -503,3 +494,4 @@ namespace NMib
 
 } // Namespace NMib
 
+#include "Malterlib_Log.hpp"

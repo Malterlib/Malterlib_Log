@@ -18,10 +18,8 @@ namespace NMib
 				,	NTime::CTime const& _Time
 				,	ESeverity _Sev
 				, 	CLogStr const& _Message
-				,	char const* const* _pCats
-				,	mint _nCats
-				,	char const* const* _pOps
-				,	mint _nOps
+				,	DMibListLinkDS_List(CSysLogCatScope, m_Link) const &_Categories
+				,	DMibListLinkDS_List(CSysLogOpScope, m_Link) const &_Operations
 				,	CLogLocationTag const& _Loc
 				);
 
@@ -31,10 +29,8 @@ namespace NMib
 				,	NTime::CTime const& _Time
 				,	ESeverity _Sev
 				, 	CLogStr const& _Message
-				,	char const* const* _pCats
-				,	mint _nCats
-				,	char const* const* _pOps
-				,	mint _nOps
+				,	DMibListLinkDS_List(CSysLogCatScope, m_Link) const &_Categories
+				,	DMibListLinkDS_List(CSysLogOpScope, m_Link) const &_Operations
 				,	CLogLocationTag const& _Loc
 				);
 
@@ -56,10 +52,8 @@ namespace NMib
 				,	NTime::CTime const& _Time
 				,	ESeverity _Sev
 				, 	CLogStr const& _Message
-				,	char const* const* _pCats
-				,	mint _nCats
-				,	char const* const* _pOps
-				,	mint _nOps
+				,	DMibListLinkDS_List(CSysLogCatScope, m_Link) const &_Categories
+				,	DMibListLinkDS_List(CSysLogOpScope, m_Link) const &_Operations
 				,	CLogLocationTag const& _Loc
 				);
 

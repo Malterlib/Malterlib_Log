@@ -1,0 +1,32 @@
+﻿// Copyright © 2015 Hansoft AB 
+// Distributed under the MIT license, see license text in LICENSE.Malterlib
+
+namespace NMib
+{
+	namespace NLog
+	{
+		CSysLogCatScope::CSysLogCatScope(CSystemLogger &_SysLog, char const *_pCategory)
+			: m_SysLog(_SysLog)
+			, m_pCategory(_pCategory) 
+		{
+			m_SysLog.f_PushCategoryScope(*this);
+		}
+
+		CSysLogCatScope::~CSysLogCatScope()
+		{
+			m_SysLog.f_PopCategoryScope(*this);
+		}
+		
+		CSysLogOpScope::CSysLogOpScope(CSystemLogger &_SysLog, char const *_pOperation)
+			: m_SysLog(_SysLog)
+			, m_pOperation(_pOperation) 
+		{
+			m_SysLog.f_PushOperationScope(*this);
+		}
+
+		CSysLogOpScope::~CSysLogOpScope()
+		{
+			m_SysLog.f_PopOperationScope(*this);
+		}
+	}
+}
