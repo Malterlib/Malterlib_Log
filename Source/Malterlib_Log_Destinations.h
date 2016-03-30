@@ -40,6 +40,7 @@ namespace NMib
 			CLogStr m_Directory;
 			bint m_bFilenameUsedTime;
 			NFile::CFile m_File;
+			NThread::CMutual m_Lock;
 
 			CLogFile();
 			~CLogFile();

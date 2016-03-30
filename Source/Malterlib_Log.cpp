@@ -680,6 +680,8 @@ namespace NMib
 			)
 		{
 			CLogFile* pLogFile = (CLogFile*)_pContext;
+			
+			DMibLock(pLogFile->m_Lock);
 
 			if (!pLogFile->f_ReadyForWrite())
 				return;
