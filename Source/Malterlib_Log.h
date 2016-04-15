@@ -346,6 +346,10 @@ namespace NMib
 			void f_PushOperationScope(NStr::CStr const& _Str);
 			void f_PushOperationScope(NStr::CWStr const& _Str);
 			void f_PushOperationScope(NStr::CUStr const& _Str);
+			
+			void f_PrepareFork();
+			void f_ForkedChild();
+			void f_ForkedParent();
 
 		};
 

@@ -45,6 +45,10 @@ namespace NMib
 			CLogFile();
 			~CLogFile();
 			bint f_ReadyForWrite();
+			
+			void f_PrepareFork();
+			void f_ForkedChild();
+			void f_ForkedParent();
 		};
 
 		void fg_LogTo_File(

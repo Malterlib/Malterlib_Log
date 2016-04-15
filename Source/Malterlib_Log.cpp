@@ -12,6 +12,7 @@ namespace NMib
 	{
 #if DMibSysLogSeverities
 
+#if 0
 		static char const* fg_ExtractFileName(char const* _pPath)
 		{
 			if (!_pPath)
@@ -36,6 +37,7 @@ namespace NMib
 
 			return _pPath;
 		}
+#endif
 
 		struct CLogger::CDetails
 		{
@@ -69,6 +71,24 @@ namespace NMib
 		CLogger::~CLogger()
 		{
 		}
+		
+		void CLogger::f_PrepareFork()
+		{
+			mp_pD->mp_GlobalDestLock.f_Lock();
+			mp_pD->mp_GlobalDestLock.f_PrepareFork();
+		}
+		
+		void CLogger::f_ForkedChild()
+		{
+			mp_pD->mp_GlobalDestLock.f_ForkedChild();
+			mp_pD->mp_GlobalDestLock.f_Unlock();
+		}
+		
+		void CLogger::f_ForkedParent()
+		{
+			mp_pD->mp_GlobalDestLock.f_ForkedParent();
+			mp_pD->mp_GlobalDestLock.f_Unlock();
+		}		
 
 		bint CLogger::f_ReadConfig(CLogStr const& _Path)
 		{
@@ -533,6 +553,24 @@ namespace NMib
 				m_File.f_Close();
 		}
 
+		void CLogFile::f_PrepareFork()
+		{
+			m_Lock.f_Lock();
+			m_Lock.f_PrepareFork();
+		}
+		
+		void CLogFile::f_ForkedChild()
+		{
+			m_Lock.f_ForkedChild();
+			m_Lock.f_Unlock();
+		}
+		
+		void CLogFile::f_ForkedParent()
+		{
+			m_Lock.f_ForkedParent();
+			m_Lock.f_Unlock();
+		}
+
 		bint CLogFile::f_ReadyForWrite()
 		{
 			if (m_File.f_IsValid())
@@ -693,10 +731,15 @@ namespace NMib
 
 			CLogStr Text = NStr::fg_Format<CLogStr>
 				(
-					DMibPFileLineFormat " #{nh,sj8,sf0} : {}-{sj2,sf0}-{sj2,sf0} {sj2,sf0}:{sj2,sf0}:{sj2,sf0}.{fr1,fe3} {sj32} {sj10} {}{\n}"
+#if 0
+					DMibPFileLineFormat " #{nh,sj8,sf0} : "
+#endif
+				 "{}-{sj2,sf0}-{sj2,sf0} {sj2,sf0}:{sj2,sf0}:{sj2,sf0}.{fr1,fe3} {sj32} {sj10} {}{\n}"
+#if 0
 					, fg_ExtractFileName(_Loc.m_pFile)
 					, _Loc.m_Line
 					, _ThreadID
+#endif
 					, DateTime.m_Year
 					, DateTime.m_Month
 					, DateTime.m_DayOfMonth
