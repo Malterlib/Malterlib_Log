@@ -5,6 +5,7 @@ namespace NMib
 {
 	namespace NLog
 	{
+#if DMibSysLogSeverities
 		CSysLogCatScope::CSysLogCatScope(CSystemLogger &_SysLog, char const *_pCategory)
 			: m_SysLog(_SysLog)
 			, m_pCategory(_pCategory) 
@@ -28,5 +29,6 @@ namespace NMib
 		{
 			m_SysLog.f_PopOperationScope(*this);
 		}
+#endif
 	}
 }
