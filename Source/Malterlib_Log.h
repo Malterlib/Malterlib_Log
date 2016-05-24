@@ -477,7 +477,7 @@ namespace NMib
 		#define DMibLogOp(_Op) DMibLogOperation(_Op)
 		#define DMibLogOpEx(_Tag, _Op) DMibLogOperationEx(_Tag, _Op)
 		
-		#define DMibLogWithCategory(d_Category, d_Severity, ...) {DMibLogCategory(d_Category); DMibLog(d_Severity, __VA_ARGS__);}
+		#define DMibLogWithCategory(d_Category, d_Severity, ...) [&]{DMibLogCategory(d_Category); DMibLog(d_Severity, __VA_ARGS__);}()
 
 		#ifndef DMibPNoShortCuts
 			#define DLog(_Sev, ...) DMibLog(_Sev, __VA_ARGS__)
