@@ -12,27 +12,29 @@ namespace NMib
 
 #if DMibSysLogSeverities
 
-		void fg_LogTo_DebugOut(
-					void* _pContext // Unused
-				,	mint _ThreadID
-				,	NTime::CTime const& _Time
-				,	ESeverity _Sev
-				, 	CLogStr const& _Message
-				,	DMibListLinkDS_List(CSysLogCatScope, m_Link) const &_Categories
-				,	DMibListLinkDS_List(CSysLogOpScope, m_Link) const &_Operations
-				,	CLogLocationTag const& _Loc
-				);
+		void fg_LogTo_DebugOut
+			(
+				mint _ThreadID
+				, NTime::CTime const& _Time
+				, ESeverity _Sev
+				, CLogStr const& _Message
+				, DMibListLinkDS_List(CSysLogCatScope, m_Link) const &_Categories
+				, DMibListLinkDS_List(CSysLogOpScope, m_Link) const &_Operations
+				, CLogLocationTag const& _Loc
+			)
+		;
 
-		void fg_LogTo_StdErr(
-					void* _pContext // Unused
-				,	mint _ThreadID
-				,	NTime::CTime const& _Time
-				,	ESeverity _Sev
-				, 	CLogStr const& _Message
-				,	DMibListLinkDS_List(CSysLogCatScope, m_Link) const &_Categories
-				,	DMibListLinkDS_List(CSysLogOpScope, m_Link) const &_Operations
-				,	CLogLocationTag const& _Loc
-				);
+		void fg_LogTo_StdErr
+			(
+				mint _ThreadID
+				, NTime::CTime const& _Time
+				, ESeverity _Sev
+				, CLogStr const& _Message
+				, DMibListLinkDS_List(CSysLogCatScope, m_Link) const &_Categories
+				, DMibListLinkDS_List(CSysLogOpScope, m_Link) const &_Operations
+				, CLogLocationTag const& _Loc
+			)
+		;
 
 		struct CLogFile
 		{			
@@ -51,21 +53,30 @@ namespace NMib
 			void f_ForkedParent();
 		};
 
-		void fg_LogTo_File(
-					void* _pContext // CLogFile*
-				,	mint _ThreadID
-				,	NTime::CTime const& _Time
-				,	ESeverity _Sev
-				, 	CLogStr const& _Message
-				,	DMibListLinkDS_List(CSysLogCatScope, m_Link) const &_Categories
-				,	DMibListLinkDS_List(CSysLogOpScope, m_Link) const &_Operations
-				,	CLogLocationTag const& _Loc
-				);
+		struct CFileLogger
+		{
+			CFileLogger(CLogFile *_pLogFile);
+			
+			void operator()
+				(
+					mint _ThreadID
+					, NTime::CTime const& _Time
+					, ESeverity _Sev
+					, CLogStr const& _Message
+					, DMibListLinkDS_List(CSysLogCatScope, m_Link) const &_Categories
+					, DMibListLinkDS_List(CSysLogOpScope, m_Link) const &_Operations
+					, CLogLocationTag const& _Loc
+				)
+			;
+		
+		private:
+			CLogFile *mp_pLogFile;
+		};
 
 		struct CLogToFile
 		{
 		private:
-			CLogger& mp_Logger;
+			CLogger &mp_Logger;
 			CLogFile mp_File;
 
 		public:
@@ -74,14 +85,14 @@ namespace NMib
 				: mp_Logger(_Logger)
 			{
 				mp_File.m_Filename = _File;
-				mp_Logger.f_PushDestination(fg_LogTo_File, &mp_File);
+				mp_Logger.f_PushDestination(CFileLogger(&mp_File));
 			}
 
 			CLogToFile(CLogger& _Logger, CLogStr const& _File, CLogFilter&& _Filter)
 				: mp_Logger(_Logger)
 			{
 				mp_File.m_Filename = _File;
-				mp_Logger.f_PushDestination(fg_LogTo_File, &mp_File, fg_Move(_Filter));
+				mp_Logger.f_PushDestination(CFileLogger(&mp_File), fg_Move(_Filter));
 			}
 
 			~CLogToFile()

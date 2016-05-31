@@ -2,8 +2,10 @@
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include <Mib/Core/Core>
+#include <Mib/Function/Function>
 #include "Malterlib_Log_Configuration.h"
 #include "Malterlib_Log_Destinations.h"
+#include "Malterlib_Log.h"
 
 namespace NMib
 {
@@ -11,6 +13,97 @@ namespace NMib
 	namespace NLog
 	{
 #if DMibSysLogSeverities
+
+		CNullLogger::CNullLogger()
+		{
+		}
+		CNullLogger::~CNullLogger()
+		{
+		}
+
+		bint CNullLogger::f_ReadConfig(CLogStr const& _Path) 
+		{ 
+			return false; 
+		}
+
+		mint CNullLogger::f_PushGlobalDestination(FLogDestination &&_fLog) 
+		{ 
+			return 0; 
+		}
+		
+		mint CNullLogger::f_PushGlobalDestination(FLogDestination &&_fLog, CLogFilter&& _Filter) 
+		{ 
+			return 0; 
+		}
+		
+		bool CNullLogger::f_PopGlobalDestination() 
+		{ 
+			 return true; 
+		}
+		
+		void CNullLogger::f_RemoveGlobalDestination(mint _ID)
+		{
+		}
+
+		void CNullLogger::f_PushDestination(FLogDestination &&_fLog) 
+		{
+		}
+		
+		void CNullLogger::f_PushDestination(FLogDestination &&_fLog, CLogFilter&& _Filter) 
+		{
+		}
+		
+		void CNullLogger::f_PopDestination() 
+		{
+		}
+
+		void CNullLogger::f_PushCategoryScope(CSysLogCatScope &_Scope)
+		{
+		}
+		
+		void CNullLogger::f_PopCategoryScope(CSysLogCatScope &_Scope)
+		{
+		}
+
+		void CNullLogger::f_PushOperationScope(CSysLogOpScope &_Scope)
+		{
+		}
+		
+		void CNullLogger::f_PopOperationScope(CSysLogOpScope &_Scope)
+		{
+		}
+
+		void CNullLogger::f_Log(CLogLocationTag _Loc, ESeverity _Sev, CLogStr const& _Str)
+		{
+		}
+
+		void CNullLogger::f_Submit(ESeverity _Sev, CLogStr&& _Text)
+		{
+		}
+
+		void CNullLogger::f_PushCategoryScope(NStr::CStr const& _Str)
+		{
+		}
+		
+		void CNullLogger::f_PushCategoryScope(NStr::CWStr const& _Str)
+		{
+		}
+		
+		void CNullLogger::f_PushCategoryScope(NStr::CUStr const& _Str)
+		{
+		}
+
+		void CNullLogger::f_PushOperationScope(NStr::CStr const& _Str)
+		{
+		}
+		
+		void CNullLogger::f_PushOperationScope(NStr::CWStr const& _Str)
+		{
+		}
+		
+		void CNullLogger::f_PushOperationScope(NStr::CUStr const& _Str)
+		{
+		}
 
 #if 0
 		static char const* fg_ExtractFileName(char const* _pPath)
@@ -43,8 +136,7 @@ namespace NMib
 		{
 			struct CDestination
 			{
-				FLogDestination* m_pfDestination;
-				void* m_pContext;
+				FLogDestination m_fLog;
 				CLogFilter m_Filter;
 			};
 
@@ -58,7 +150,8 @@ namespace NMib
 			NThread::TCThreadLocal<CThreadInfo, NMem::CAllocator_NonTrackedHeap> mp_ThreadInfo;
 
 			NThread::CMutualManyRead mp_GlobalDestLock; // TODO: Do without? Require global dests set at startup?
-			NContainer::TCVector<CDestination, NMem::CAllocator_NonTrackedHeap> mp_lGlobalDestinations;
+			mint mp_NextGlobalDestinationID;
+			NContainer::TCMap<mint, CDestination, CSort_Default, NMem::CAllocator_NonTrackedHeap> mp_GlobalDestinations;
 
 			NContainer::TCVector< NPtr::TCUniquePointer<CLogFile> > mp_lConfigLogFiles;
 		};
@@ -212,7 +305,7 @@ namespace NMib
 			if (_Name.f_CmpNoCase("DebugOut") == 0)
 			{
 				fl_ParseFilter(_lArgs, 0, Filter);
-				f_PushGlobalDestination(fg_LogTo_DebugOut, nullptr, fg_Move(Filter));
+				f_PushGlobalDestination(fg_LogTo_DebugOut, fg_Move(Filter));
 			}
 			else if (_Name.f_CmpNoCase("File") == 0)
 			{
@@ -226,62 +319,56 @@ namespace NMib
 
 				pLogFile->m_Filename = LogFile;
 
-				f_PushGlobalDestination(fg_LogTo_File, pLogFile.f_Get(), fg_Move(Filter));
+				f_PushGlobalDestination(CFileLogger(pLogFile.f_Get()), fg_Move(Filter));
 
 				mp_pD->mp_lConfigLogFiles.f_Insert(fg_Move(pLogFile));
 			}
 		}
 
-		void CLogger::f_PushGlobalDestination(FLogDestination* _pFDest, void* _pContext)
+		mint CLogger::f_PushGlobalDestination(FLogDestination &&_fLog)
 		{
 			DMibLock(mp_pD->mp_GlobalDestLock);
-			CDetails::CDestination& NewDest = mp_pD->mp_lGlobalDestinations.f_Insert();
-			NewDest.m_pfDestination = _pFDest;
-			NewDest.m_pContext = _pContext;
+			mint ID = ++mp_pD->mp_NextGlobalDestinationID;
+			CDetails::CDestination& NewDest = mp_pD->mp_GlobalDestinations[ID];
+			NewDest.m_fLog = fg_Move(_fLog);
+			return ID;
 		}
 
-		void CLogger::f_RemoveGlobalDestination(FLogDestination* _pFDest)
+		void CLogger::f_RemoveGlobalDestination(mint _DestinationID)
 		{
 			DMibLock(mp_pD->mp_GlobalDestLock);
-			aint iDest = 0;
-			for (auto &Dest : mp_pD->mp_lGlobalDestinations)
-			{
-				if (Dest.m_pfDestination == _pFDest)
-				{
-					mp_pD->mp_lGlobalDestinations.f_Remove(iDest);
-					break;
-				}
-				++iDest;
-			}
+			mp_pD->mp_GlobalDestinations.f_Remove(_DestinationID);
 		}
 
-		void CLogger::f_PushGlobalDestination(FLogDestination* _pFDest, void* _pContext, CLogFilter&& _Filter)
+		mint CLogger::f_PushGlobalDestination(FLogDestination &&_fLog, CLogFilter &&_Filter)
 		{
 			DMibLock(mp_pD->mp_GlobalDestLock);
-			CDetails::CDestination& NewDest = mp_pD->mp_lGlobalDestinations.f_Insert();
-			NewDest.m_pfDestination = _pFDest;
-			NewDest.m_pContext = _pContext;
+			mint ID = ++mp_pD->mp_NextGlobalDestinationID;
+			CDetails::CDestination &NewDest = mp_pD->mp_GlobalDestinations[ID];
+			NewDest.m_fLog = fg_Move(_fLog);
 			NewDest.m_Filter = fg_Move(_Filter);
+			return ID;
 		}
 
-		void CLogger::f_PopGlobalDestination()
+		bool CLogger::f_PopGlobalDestination()
 		{
 			DMibLock(mp_pD->mp_GlobalDestLock);
-			mp_pD->mp_lGlobalDestinations.f_Pop();
+			if (mp_pD->mp_GlobalDestinations.f_IsEmpty())
+				return false;
+			mp_pD->mp_GlobalDestinations.f_Remove(mp_pD->mp_GlobalDestinations.f_FindLargest());
+			return !mp_pD->mp_GlobalDestinations.f_IsEmpty();
 		}
 
-		void CLogger::f_PushDestination(FLogDestination* _pFDest, void* _pContext)
+		void CLogger::f_PushDestination(FLogDestination &&_fLog)
 		{
 			CDetails::CDestination& NewDest = (*mp_pD->mp_ThreadInfo).m_lDestinations.f_Insert();
-			NewDest.m_pfDestination = _pFDest;
-			NewDest.m_pContext = _pContext;
+			NewDest.m_fLog = fg_Move(_fLog);
 		}
 
-		void CLogger::f_PushDestination(FLogDestination* _pFDest, void* _pContext, CLogFilter&& _Filter)
+		void CLogger::f_PushDestination(FLogDestination &&_fLog, CLogFilter&& _Filter)
 		{
 			CDetails::CDestination& NewDest = (*mp_pD->mp_ThreadInfo).m_lDestinations.f_Insert();
-			NewDest.m_pfDestination = _pFDest;
-			NewDest.m_pContext = _pContext;
+			NewDest.m_fLog = fg_Move(_fLog);
 			NewDest.m_Filter = fg_Move(_Filter);
 		}
 
@@ -320,33 +407,35 @@ namespace NMib
 			auto const &Ops = (*mp_pD->mp_ThreadInfo).m_OperationStack;
 
 			auto fl_SendToDests =
-				[&](NContainer::TCVector<CDetails::CDestination, NMem::CAllocator_NonTrackedHeap>& _lDests)
+				[&](auto &_Container)
 				{
-					for (auto DIter = _lDests.f_GetIterator()
-						;DIter
-						;++DIter)
+					for (auto &Destination : _Container)
 					{
-						if (	(*DIter).m_Filter.f_Test(
-										ThreadID
-									,	LogTime
-									,	_Sev
-									,	_Text
-									,	Cats
-									,	Ops
-									,	_Loc
+						if 
+							(
+								Destination.m_Filter.f_Test
+								(
+									ThreadID
+									, LogTime
+									, _Sev
+									, _Text
+									, Cats
+									, Ops
+									, _Loc
 								)
 							)
 						{
-							(*(*DIter).m_pfDestination)( 
-									(*DIter).m_pContext
-								,	ThreadID
-								,	LogTime
-								,	_Sev
-								,	_Text
-								,	Cats
-								,	Ops
-								,	_Loc
-								);
+							Destination.m_fLog
+								( 
+									ThreadID
+									, LogTime
+									, _Sev
+									, _Text
+									, Cats
+									, Ops
+									, _Loc
+								)
+							;
 						}
 					}
 
@@ -357,7 +446,7 @@ namespace NMib
 
 			{
 				DMibLockRead(mp_pD->mp_GlobalDestLock);
-				fl_SendToDests(mp_pD->mp_lGlobalDestinations);
+				fl_SendToDests(mp_pD->mp_GlobalDestinations);
 			}
 		}
 
@@ -435,6 +524,10 @@ namespace NMib
 					return "None";
 				case ESeverity_Debug:
 					return "Debug";
+				case ESeverity_DebugVerbose1:
+					return "DebugV1";
+				case ESeverity_DebugVerbose2:
+					return "DebugV2";
 				case ESeverity_Info:
 					return "Info";				
 				case ESeverity_Warning:
@@ -462,6 +555,10 @@ namespace NMib
 				return ESeverity_All;
 			else if (_Name.f_CmpNoCase("Debug") == 0)
 				return ESeverity_Debug;
+			else if (_Name.f_CmpNoCase("DebugV1") == 0)
+				return ESeverity_DebugVerbose1;
+			else if (_Name.f_CmpNoCase("DebugV2") == 0)
+				return ESeverity_DebugVerbose2;
 			else if (_Name.f_CmpNoCase("Info") == 0)
 				return ESeverity_Info;
 			else if (_Name.f_CmpNoCase("Warning") == 0)
@@ -479,8 +576,7 @@ namespace NMib
 		}
 
 		void fg_LogTo_DebugOut(
-					void* _pContext // Unused
-				,	mint _ThreadID
+				mint _ThreadID
 				,	NTime::CTime const& _Time
 				,	ESeverity _Sev
 				, 	CLogStr const& _Message
@@ -511,8 +607,7 @@ namespace NMib
 		
 		void fg_LogTo_StdErr
 			(
-				void* _pContext // Unused
-				, mint _ThreadID
+				mint _ThreadID
 				, NTime::CTime const& _Time
 				, ESeverity _Sev
 				, CLogStr const& _Message
@@ -705,10 +800,14 @@ namespace NMib
 			}
 		}
 
-		void fg_LogTo_File
+		CFileLogger::CFileLogger(CLogFile *_pLogFile)
+			: mp_pLogFile(_pLogFile)
+		{
+		}
+			
+		void CFileLogger::operator()
 			(
-				void* _pContext // CLogFile*
-				, mint _ThreadID
+				mint _ThreadID
 				, NTime::CTime const& _Time
 				, ESeverity _Sev
 				, CLogStr const& _Message
@@ -717,7 +816,7 @@ namespace NMib
 				, CLogLocationTag const& _Loc
 			)
 		{
-			CLogFile* pLogFile = (CLogFile*)_pContext;
+			CLogFile* pLogFile = mp_pLogFile;
 			
 			DMibLock(pLogFile->m_Lock);
 

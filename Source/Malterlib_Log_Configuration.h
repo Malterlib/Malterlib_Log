@@ -7,16 +7,20 @@
 */
 #pragma once
 
-#define DMibLogSeverity_None		0
-#define DMibLogSeverity_Debug		1
-#define DMibLogSeverity_Info		2
-#define DMibLogSeverity_Warning		4
-#define DMibLogSeverity_Error		8
-#define DMibLogSeverity_Perf_Info	16
-#define DMibLogSeverity_Perf_Warning	32
-#define DMibLogSeverity_Perf_Error	64
-#define DMibLogSeverity_Critical	128
-#define DMibLogSeverity_All			(1 | 2 | 4 | 8 | 16 | 32 | 64 | 128)
+#define DMibLogSeverity_None			0
+#define DMibLogSeverity_Debug			1
+#define DMibLogSeverity_DebugVerbose1	2
+#define DMibLogSeverity_DebugVerbose2	4
+#define DMibLogSeverity_Info			8
+#define DMibLogSeverity_Warning			16
+#define DMibLogSeverity_Error			32
+#define DMibLogSeverity_Perf_Info		64
+#define DMibLogSeverity_Perf_Warning	128
+#define DMibLogSeverity_Perf_Error		256
+#define DMibLogSeverity_Critical		512
+#define DMibLogSeverity_All			(1 | 2 | 4 | 8 | 16 | 32 | 64 | 128 | 256 | 512)
+#define DMibLogSeverity_AllNoPerfNoVerbose (DMibLogSeverity_All & ~(DMibLogSeverity_Perf_Info | DMibLogSeverity_Perf_Warning | DMibLogSeverity_Perf_Error | DMibLogSeverity_DebugVerbose1 | DMibLogSeverity_DebugVerbose2))
+#define DMibLogSeverity_AllNoPerf (DMibLogSeverity_All & ~(DMibLogSeverity_Perf_Info | DMibLogSeverity_Perf_Warning | DMibLogSeverity_Perf_Error))
 
 // Define DMibSysLogSeverities to specify which severities to log.
 #ifndef DMibSysLogSeverities
@@ -28,7 +32,7 @@
 #elif defined(DConfig_Profile)
 	#define DMibSysLogSeverities (DMibLogSeverity_Error | DMibLogSeverity_Perf_Info | DMibLogSeverity_Perf_Warning | DMibLogSeverity_Perf_Error | DMibLogSeverity_Critical)
 #elif defined(DMibDebug)
-	#define DMibSysLogSeverities (DMibLogSeverity_All & ~(DMibLogSeverity_Perf_Info | DMibLogSeverity_Perf_Warning | DMibLogSeverity_Perf_Error) )
+	#define DMibSysLogSeverities DMibLogSeverity_AllNoPerfNoVerbose
 #else
 	#define DMibSysLogSeverities (DMibLogSeverity_Warning | DMibLogSeverity_Error | DMibLogSeverity_Critical)
 #endif
