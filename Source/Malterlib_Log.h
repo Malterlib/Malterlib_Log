@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 /*
@@ -158,20 +158,22 @@ namespace NMib
 
 		enum ESeverity
 		{
-			ESeverity_None		= 0, // Only to be used in filters
+			ESeverity_None		= 0 // Only to be used in filters
 
-			ESeverity_Debug				= DMibBit(0)
-			,ESeverity_Info				= DMibBit(1)
-			,ESeverity_Warning			= DMibBit(2)
-			,ESeverity_Error			= DMibBit(3)
+			, ESeverity_Debug			= DMibBit(0)
+			, ESeverity_DebugVerbose1	= DMibBit(1)
+			, ESeverity_DebugVerbose2	= DMibBit(2)
+			, ESeverity_Info			= DMibBit(3)
+			, ESeverity_Warning			= DMibBit(4)
+			, ESeverity_Error			= DMibBit(5)
 
-			,ESeverity_Perf_Info		= DMibBit(4)
-			,ESeverity_Perf_Warning		= DMibBit(5)
-			,ESeverity_Perf_Error		= DMibBit(6)
+			, ESeverity_Perf_Info		= DMibBit(6)
+			, ESeverity_Perf_Warning	= DMibBit(7)
+			, ESeverity_Perf_Error		= DMibBit(8)
 
-			,ESeverity_Critical			= DMibBit(7)
+			, ESeverity_Critical		= DMibBit(9)
 
-			,ESeverity_All				= DMibBit(8) - 1	 // Only to be used in filters
+			, ESeverity_All				= DMibBit(10) - 1	 // Only to be used in filters
 		};
 
 		typedef NStr::CStrNonTracked CLogStr;
@@ -229,16 +231,22 @@ namespace NMib
 			{}
 		};
 
-		typedef void (FLogDestination)(
-					void* _pContext
-				,	mint _ThreadID
-				,	NTime::CTime const& _Time
-				,	ESeverity _Sev
-				, 	CLogStr const& _Message
-				,	DMibListLinkDS_List(CSysLogCatScope, m_Link) const &_Categories
-				,	DMibListLinkDS_List(CSysLogOpScope, m_Link) const &_Operations
-				,	CLogLocationTag const& _Loc
-				);
+		using FLogDestination = NFunction::TCFunction
+			<
+				void 
+				(
+					NFunction::CThisTag &
+					, mint _ThreadID
+					, NTime::CTime const& _Time
+					, ESeverity _Sev
+					, CLogStr const& _Message
+					, DMibListLinkDS_List(CSysLogCatScope, m_Link) const &_Categories
+					, DMibListLinkDS_List(CSysLogOpScope, m_Link) const &_Operations
+					, CLogLocationTag const& _Loc
+				)
+				, NFunction::CFunctionNoCopyTag
+			>
+		;
 
 		struct CLogFilter
 		{
@@ -318,13 +326,13 @@ namespace NMib
 
 			bint f_ReadConfig(CLogStr const& _Path);
 
-			void f_PushGlobalDestination(FLogDestination* _pFDest, void* _pContext);
-			void f_PushGlobalDestination(FLogDestination* _pFDest, void* _pContext, CLogFilter&& _Filter);
-			void f_PopGlobalDestination();
-			void f_RemoveGlobalDestination(FLogDestination* _pFDest);
+			mint f_PushGlobalDestination(FLogDestination &&_fLog);
+			mint f_PushGlobalDestination(FLogDestination &&_fLog, CLogFilter&& _Filter);
+			bool f_PopGlobalDestination();
+			void f_RemoveGlobalDestination(mint _ID);
 
-			void f_PushDestination(FLogDestination* _pFDest, void* _pContext);
-			void f_PushDestination(FLogDestination* _pFDest, void* _pContext, CLogFilter&& _Filter);
+			void f_PushDestination(FLogDestination &&_fLog);
+			void f_PushDestination(FLogDestination &&_fLog, CLogFilter&& _Filter);
 			void f_PopDestination();
 
 			void f_PushCategoryScope(CSysLogCatScope &_Scope);
@@ -360,15 +368,16 @@ namespace NMib
 			CNullLogger();
 			~CNullLogger();
 
-			bint f_ReadConfig(CLogStr const& _Path) { return false; }
+			bint f_ReadConfig(CLogStr const& _Path);
 
-			void f_PushGlobalDestination(FLogDestination* _pFDest, void* _pContext) {}
-			void f_PushGlobalDestination(FLogDestination* _pFDest, void* _pContext, CLogFilter&& _Filter) {}
-			void f_PopGlobalDestination() {}
+			mint f_PushGlobalDestination(FLogDestination &&_fLog);
+			mint f_PushGlobalDestination(FLogDestination &&_fLog, CLogFilter&& _Filter);
+			bool f_PopGlobalDestination();
+			void f_RemoveGlobalDestination(mint _ID);
 
-			void f_PushDestination(FLogDestination* _pFDest, void* _pContext) {}
-			void f_PushDestination(FLogDestination* _pFDest, void* _pContext, CLogFilter&& _Filter) {}
-			void f_PopDestination() {}
+			void f_PushDestination(FLogDestination &&_fLog);
+			void f_PushDestination(FLogDestination &&_fLog, CLogFilter&& _Filter);
+			void f_PopDestination();
 
 			void f_PushCategoryScope(CSysLogCatScope &_Scope);
 			void f_PopCategoryScope(CSysLogCatScope &_Scope);
@@ -379,7 +388,7 @@ namespace NMib
 			void f_Log(CLogLocationTag _Loc, ESeverity _Sev, CLogStr const& _Str);
 
 			// Internal
-			void f_Submit(ESeverity _Sev, CLogStr&& _Text) {}
+			void f_Submit(ESeverity _Sev, CLogStr&& _Text);
 
 			// Disable
 			void f_PushCategoryScope(NStr::CStr const& _Str);
@@ -410,6 +419,18 @@ namespace NMib
 			#define DMibLog_Debug(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_Debug, __VA_ARGS__)
 		#else 
 			#define DMibLog_Debug(...) (void)0
+		#endif
+
+		#if (DMibSysLogSeverities) & DMibLogSeverity_DebugVerbose1
+			#define DMibLog_DebugVerbose1(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_DebugVerbose1, __VA_ARGS__)
+		#else 
+			#define DMibLog_DebugVerbose1(...) (void)0
+		#endif
+
+		#if (DMibSysLogSeverities) & DMibLogSeverity_DebugVerbose2
+			#define DMibLog_DebugVerbose2(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_DebugVerbose2, __VA_ARGS__)
+		#else 
+			#define DMibLog_DebugVerbose2(...) (void)0
 		#endif
 
 		#if (DMibSysLogSeverities) & DMibLogSeverity_Info

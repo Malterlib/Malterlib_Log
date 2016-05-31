@@ -43,8 +43,22 @@ Property
 	{
 		!!MalterlibLibrary_Log true
 	}
+	
+	MalterlibLog_EnableVerboseDebugLog false // User: Enable verbose debug logs
+	{
+		!!MalterlibLog_EnableVerboseDebugLog ""
+	}
 }
 
+Compile
+{
+	!!CompileDialect "C"
+	PreprocessorDefines "DMibSysLogSeverities=DMibLogSeverity_AllNoPerf;@(Compile.PreprocessorDefines)"
+	{
+		!!MalterlibLog_EnableVerboseDebugLog true
+	}
+}
+	
 Property
 {
 	!!MalterlibEnableInternalTests true
