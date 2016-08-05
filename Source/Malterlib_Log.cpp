@@ -305,7 +305,7 @@ namespace NMib
 			if (_Name.f_CmpNoCase("DebugOut") == 0)
 			{
 				fl_ParseFilter(_lArgs, 0, Filter);
-				f_PushGlobalDestination(fg_LogTo_DebugOut, fg_Move(Filter));
+				f_PushGlobalDestination(&fg_LogTo_DebugOut, fg_Move(Filter));
 			}
 			else if (_Name.f_CmpNoCase("File") == 0)
 			{
