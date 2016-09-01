@@ -48,14 +48,75 @@ Property
 	{
 		!!MalterlibLog_EnableVerboseDebugLog ""
 	}
+	
+	MalterlibLog_Severities "None"
+	{
+		&
+		{
+			MalterlibLog_Severities ""
+			|
+			{
+				Config Release
+				Config Optimized
+			}
+		}
+	}
+	
+	MalterlibLog_Severities "Error;Critical;Warning;Info;Debug"
+	{
+		&
+		{
+			MalterlibLog_Severities ""
+			Config "Release Testing"
+		}
+	}
+	
+	MalterlibLog_Severities "Error;Critical;Perf_Info;Perf_Warning;Perf_Error"
+	{
+		&
+		{
+			MalterlibLog_Severities ""
+			Config "Profile"
+		}
+	}
+
+	MalterlibLog_Severities "AllNoPerfNoVerbose"
+	{
+		&
+		{
+			MalterlibLog_Severities ""
+			DebugCode true
+		}
+	}
+
+	MalterlibLog_Severities "Warning;Error;Critical"
+	{
+		&
+		{
+			MalterlibLog_Severities ""
+		}
+	}
+	
+	MalterlibLog_Severities_Expand_Template "|DMibLogSeverity_@(Explodee)"
+	{
+		!Explodee ""
+	}
+	
+	MalterlibLog_Severities_Expand "DMibSysLogSeverities=(DMibLogSeverity_None@(Builtin.Function->ExplodeList('@(MalterlibLog_Severities)', ';', 'MalterlibLog_Severities_Expand_Template')))"
+	
+	MalterlibLog_Severities "AllNoPerf"
+	{
+		!!MalterlibLog_EnableVerboseDebugLog true
+	}
 }
 
 Compile
 {
 	!!CompileDialect "C"
-	PreprocessorDefines "DMibSysLogSeverities=DMibLogSeverity_AllNoPerf;@(Compile.PreprocessorDefines)"
+	
+	PreprocessorDefines "@(MalterlibLog_Severities_Expand);@(Compile.PreprocessorDefines)"
 	{
-		!!MalterlibLog_EnableVerboseDebugLog true
+		!MalterlibLog_Severities "" 
 	}
 }
 	
