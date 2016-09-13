@@ -231,12 +231,11 @@ namespace NMib
 			{}
 		};
 
-		using FLogDestination = NFunction::TCFunction
+		using FLogDestination = NFunction::TCFunctionMovable
 			<
 				void 
 				(
-					NFunction::CThisTag &
-					, mint _ThreadID
+					mint _ThreadID
 					, NTime::CTime const& _Time
 					, ESeverity _Sev
 					, CLogStr const& _Message
@@ -244,14 +243,12 @@ namespace NMib
 					, NContainer::TCVector<NStr::CStr> const &_Operations
 					, CLogLocationTag const& _Loc
 				)
-				, NFunction::CFunctionNoCopyTag
 			>
 		;
 
-		using FLogDispatch = NFunction::TCFunction
+		using FLogDispatch = NFunction::TCFunctionMovable
 			<
-				void (NFunction::CThisTag &, NFunction::TCFunction<void (NFunction::CThisTag &), NFunction::CFunctionNoCopyTag> &&_fToDispatch)
-				, NFunction::CFunctionNoCopyTag
+				void (NFunction::TCFunctionMovable<void ()> &&_fToDispatch)
 			>
 		;
 		
