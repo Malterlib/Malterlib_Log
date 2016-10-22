@@ -193,6 +193,7 @@ namespace NMib
 		{
 			inline CSysLogCatScope(CSystemLogger &_SysLog, char const *_pCategory);
 			inline ~CSysLogCatScope();
+			CSysLogCatScope(CSysLogCatScope &&_Other) = default;
 			
 			CSystemLogger &m_SysLog;
 			ch8 const *m_pCategory;
@@ -205,6 +206,7 @@ namespace NMib
 
 			inline CSysLogOpScope(CSystemLogger &_SysLog, char const *_pOperation);
 			inline ~CSysLogOpScope();
+			CSysLogOpScope(CSysLogOpScope &&_Other) = default;
 			
 			ch8 const *m_pOperation;
 			DMibListLinkDS_Link(CSysLogOpScope, m_Link);
