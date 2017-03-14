@@ -147,14 +147,14 @@ namespace NMib
 				
 				DMibListLinkDS_List(CSysLogCatScope, m_Link) m_CategoryStack;
 				DMibListLinkDS_List(CSysLogOpScope, m_Link) m_OperationStack;
-				NContainer::TCVector<CDestination, NMem::CAllocator_NonTrackedHeap> m_lDestinations;
+				NContainer::TCVector<NPtr::TCSharedPointer<CDestination, NMem::CAllocator_NonTrackedHeap>, NMem::CAllocator_NonTrackedHeap> m_lDestinations;
 			};
 
 			NThread::TCThreadLocal<CThreadInfo, NMem::CAllocator_NonTrackedHeap> mp_ThreadInfo;
 
 			NThread::CMutualManyRead mp_GlobalDestLock; // TODO: Do without? Require global dests set at startup?
 			mint mp_NextGlobalDestinationID;
-			NContainer::TCMap<mint, CDestination, CSort_Default, NMem::CAllocator_NonTrackedHeap> mp_GlobalDestinations;
+			NContainer::TCMap<mint, NPtr::TCSharedPointer<CDestination, NMem::CAllocator_NonTrackedHeap>, CSort_Default, NMem::CAllocator_NonTrackedHeap> mp_GlobalDestinations;
 
 			NContainer::TCVector< NPtr::TCUniquePointer<CLogFile> > mp_lConfigLogFiles;
 			
@@ -334,7 +334,7 @@ namespace NMib
 		{
 			DMibLock(mp_pD->mp_GlobalDestLock);
 			mint ID = ++mp_pD->mp_NextGlobalDestinationID;
-			CDetails::CDestination& NewDest = mp_pD->mp_GlobalDestinations[ID];
+			CDetails::CDestination& NewDest = *(mp_pD->mp_GlobalDestinations[ID] = fg_Construct());
 			NewDest.m_fLog = fg_Move(_fLog);
 			return ID;
 		}
@@ -349,7 +349,7 @@ namespace NMib
 		{
 			DMibLock(mp_pD->mp_GlobalDestLock);
 			mint ID = ++mp_pD->mp_NextGlobalDestinationID;
-			CDetails::CDestination &NewDest = mp_pD->mp_GlobalDestinations[ID];
+			CDetails::CDestination &NewDest = *(mp_pD->mp_GlobalDestinations[ID] = fg_Construct());
 			NewDest.m_fLog = fg_Move(_fLog);
 			NewDest.m_Filter = fg_Move(_Filter);
 			return ID;
@@ -366,13 +366,13 @@ namespace NMib
 
 		void CLogger::f_PushDestination(FLogDestination &&_fLog)
 		{
-			CDetails::CDestination& NewDest = (*mp_pD->mp_ThreadInfo).m_lDestinations.f_Insert();
+			CDetails::CDestination& NewDest = *((*mp_pD->mp_ThreadInfo).m_lDestinations.f_Insert() = fg_Construct());
 			NewDest.m_fLog = fg_Move(_fLog);
 		}
 
 		void CLogger::f_PushDestination(FLogDestination &&_fLog, CLogFilter&& _Filter)
 		{
-			CDetails::CDestination& NewDest = (*mp_pD->mp_ThreadInfo).m_lDestinations.f_Insert();
+			CDetails::CDestination& NewDest = *((*mp_pD->mp_ThreadInfo).m_lDestinations.f_Insert() = fg_Construct());
 			NewDest.m_fLog = fg_Move(_fLog);
 			NewDest.m_Filter = fg_Move(_Filter);
 		}
@@ -437,8 +437,9 @@ namespace NMib
 			auto fSendToDests =
 				[&](auto &_Container, auto const &_Categories, auto const &_Operations)
 				{
-					for (auto &Destination : _Container)
+					for (auto &pDestination : _Container)
 					{
+						auto &Destination = *pDestination;
 						if 
 							(
 								Destination.m_Filter.f_Test
@@ -457,9 +458,9 @@ namespace NMib
 							{
 								Details.mp_Dispatcher
 									(
-										[pLog = &Destination.m_fLog, ThreadID, LogTime, _Sev, _Text, _Categories, _Operations, _Loc]() mutable
+										[pDestination, ThreadID, LogTime, _Sev, _Text, _Categories, _Operations, _Loc]() mutable
 										{
-											(*pLog)
+											pDestination->m_fLog
 												( 
 													ThreadID
 													, LogTime
