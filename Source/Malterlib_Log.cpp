@@ -164,6 +164,7 @@ namespace NMib
 		CLogger::CLogger()
 		{
 			mp_pD = fg_Construct();
+			DMibCheck(true); // Add dependency to check system
 		}
 
 		CLogger::~CLogger()
