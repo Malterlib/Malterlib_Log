@@ -108,6 +108,16 @@ Property
 	{
 		!!MalterlibLog_EnableVerboseDebugLog true
 	}
+
+	MalterlibLog_Severities "@(MalterlibLog_EnableVerboseDebugLog)"
+	{
+		&
+		{
+			!MalterlibLog_EnableVerboseDebugLog false
+			!MalterlibLog_EnableVerboseDebugLog true
+			!MalterlibLog_EnableVerboseDebugLog ""
+		}
+	}
 }
 
 Compile
