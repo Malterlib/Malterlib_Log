@@ -490,12 +490,14 @@ namespace NMib
 		#if (DMibSysLogSeverities) != 0
 			#define DMibLogCategory(_Category) NMib::NLog::CSysLogCatScope l_Cat##__LINE__(NMib::fg_GetSys()->f_GetLogger(), #_Category)
 			#define DMibLogCategoryEx(_Tag, _Category) NMib::NLog::CSysLogCatScope l_Cat##__LINE__##_Tag(NMib::fg_GetSys()->f_GetLogger(), #_Category)
+			#define DMibLogCategoryStr(d_Category) NMib::NLog::CSysLogCatScope l_Cat##__LINE__(NMib::fg_GetSys()->f_GetLogger(), d_Category)
 			
 			#define DMibLogOperation(_Op) NMib::NLog::CSysLogOpScope l_Cat##__LINE__(NMib::fg_GetSys()->f_GetLogger(), #_Op)
 			#define DMibLogOperationEx(_Tag, _Op) NMib::NLog::CSysLogOpScope l_Cat##__LINE__##_Tag(NMib::fg_GetSys()->f_GetLogger(), #_Op)
 		#else
 			#define DMibLogCategory(_Category) (void)0
-			#define DMibLogCategoryEx(_Tag, _Category) (void)0 
+			#define DMibLogCategoryEx(_Tag, _Category) (void)0
+			#define DMibLogCategoryStr(d_Category) (void)0
 			
 			#define DMibLogOperation(_Op) (void)0
 			#define DMibLogOperationEx(_Tag, _Op) (void)0
@@ -511,6 +513,7 @@ namespace NMib
 		#ifndef DMibPNoShortCuts
 			#define DLog(_Sev, ...) DMibLog(_Sev, __VA_ARGS__)
 			#define DLogWithCategory DMibLogWithCategory
+			#define DLogCategoryStr DMibLogCategoryStr
 
 			#define DLogCategory(_Category) DMibLogCategory(_Category)
 			#define DLogCategoryEx(_Tag, _Category) DMibLogCategoryEx(_Tag, _Category)
