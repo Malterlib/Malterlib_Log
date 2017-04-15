@@ -466,9 +466,9 @@ namespace NMib
 													ThreadID
 													, LogTime
 													, _Sev
-													, fg_Move(_Text)
-													, fg_Move(_Categories)
-													, fg_Move(_Operations)
+													, _Text
+													, _Categories
+													, _Operations
 													, _Loc
 												)
 											;
