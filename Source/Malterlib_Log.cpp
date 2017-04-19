@@ -757,7 +757,7 @@ namespace NMib
 				try
 				{
 					NFile::CFile::fs_CreateDirectory(DestPath);
-					m_File.f_Open(LogFile, NFile::EFileOpen_Write | NFile::EFileOpen_Read | NFile::EFileOpen_ShareRead);
+					m_File.f_Open(LogFile, NFile::EFileOpen_Write | NFile::EFileOpen_Read | NFile::EFileOpen_ShareRead | NFile::EFileOpen_NoLocalCache);
 				}
 				catch(NFile::CExceptionFile const&)
 				{
@@ -825,7 +825,7 @@ namespace NMib
 					if (!fl_RenameLogFile(LogFile))
 						return false;
 					NFile::CFile::fs_CreateDirectory(DestPath);
-					m_File.f_Open(LogFile, NFile::EFileOpen_Write | NFile::EFileOpen_Read | NFile::EFileOpen_ShareRead);
+					m_File.f_Open(LogFile, NFile::EFileOpen_Write | NFile::EFileOpen_Read | NFile::EFileOpen_ShareRead | NFile::EFileOpen_NoLocalCache);
 					return true;
 				}
 				catch (NException::CException const &)
@@ -842,7 +842,7 @@ namespace NMib
 							if (!fl_RenameLogFile(NewName))
 								continue;
 							NFile::CFile::fs_CreateDirectory(DestPath);
-							m_File.f_Open(NewName, NFile::EFileOpen_Write | NFile::EFileOpen_Read | NFile::EFileOpen_ShareRead);
+							m_File.f_Open(NewName, NFile::EFileOpen_Write | NFile::EFileOpen_Read | NFile::EFileOpen_ShareRead | NFile::EFileOpen_NoLocalCache);
 						}
 						catch(NFile::CExceptionFile const&)
 						{					
@@ -874,7 +874,7 @@ namespace NMib
 			)
 		{
 			CLogFile* pLogFile = mp_pLogFile;
-			
+		
 			DMibLock(pLogFile->m_Lock);
 
 			if (!pLogFile->f_ReadyForWrite())
@@ -911,6 +911,10 @@ namespace NMib
 
 			pFile->f_Write(Text.f_GetStr(), Text.f_GetLen() * sizeof(CLogStr::CChar));
 			pFile->f_Flush(false); // Optional?
+#ifdef DPlatformFamily_OSX
+			// Without this no file change notification will be triggered
+			pFile->f_SetLength(pFile->f_GetLength());
+#endif
 		}
 #endif
 
