@@ -126,7 +126,16 @@ Compile
 	
 	PreprocessorDefines "@(MalterlibLog_Severities_Expand);@(Compile.PreprocessorDefines)"
 	{
-		!MalterlibLog_Severities "" 
+		&
+		{
+			!MalterlibLog_Severities ""
+			!Documentation Doxygen
+		}
+	}
+	
+	PreprocessorDefines "DMibSysLogSeverities=0xffff;@(Compile.PreprocessorDefines)"
+	{
+		!!Documentation Doxygen
 	}
 }
 	
