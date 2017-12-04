@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include <Mib/Core/Core>
@@ -750,6 +750,13 @@ namespace NMib
 			CLogStr Name = NFile::CFile::fs_GetFileNoExt(m_Filename);
 			CLogStr Extension = NFile::CFile::fs_GetExtension(m_Filename);
 
+			NFile::EFileOpen c_LogOpenFlags = NFile::EFileOpen_Write | NFile::EFileOpen_DontTruncate | NFile::EFileOpen_Read | NFile::EFileOpen_ShareRead | NFile::EFileOpen_NoLocalCache;
+#ifdef DPlatformFamily_Windows
+			NFile::EFileOpen c_CheckOldOpenFlags = c_LogOpenFlags;
+#else
+			NFile::EFileOpen c_CheckOldOpenFlags = NFile::EFileOpen_Write | NFile::EFileOpen_DontTruncate | NFile::EFileOpen_Read | NFile::EFileOpen_NoLocalCache;
+#endif
+
 			if (m_bFilenameUsedTime)
 			{
 				// Assume time string is unique enough.
@@ -779,12 +786,18 @@ namespace NMib
 				;
 				
 				auto fl_RenameLogFile
-					= [&](NStr::CStr const& _LogFile) -> bool
+					= [&](CLogStr const &_LogFile) -> bool
 					{
 						if (NFile::CFile::fs_FileExists(_LogFile, NFile::EFileAttrib_File))
 						{
+							// Check if old file is already opened
+							{
+								NFile::CFile TempFile;
+								TempFile.f_Open(_LogFile, c_CheckOldOpenFlags);
+							}
+
 							// First try to rename the old file
-							
+
 							NTime::CTime WriteTime;
 							{
 								NFile::CFile File;
@@ -825,7 +838,8 @@ namespace NMib
 					if (!fl_RenameLogFile(LogFile))
 						return false;
 					NFile::CFile::fs_CreateDirectory(DestPath);
-					m_File.f_Open(LogFile, NFile::EFileOpen_Write | NFile::EFileOpen_Read | NFile::EFileOpen_ShareRead | NFile::EFileOpen_NoLocalCache);
+					m_File.f_Open(LogFile, c_LogOpenFlags);
+					m_File.f_SetLength(0);
 					return true;
 				}
 				catch (NException::CException const &)
@@ -842,9 +856,10 @@ namespace NMib
 							if (!fl_RenameLogFile(NewName))
 								continue;
 							NFile::CFile::fs_CreateDirectory(DestPath);
-							m_File.f_Open(NewName, NFile::EFileOpen_Write | NFile::EFileOpen_Read | NFile::EFileOpen_ShareRead | NFile::EFileOpen_NoLocalCache);
+							m_File.f_Open(NewName, c_LogOpenFlags);
+							m_File.f_SetLength(0);
 						}
-						catch(NFile::CExceptionFile const&)
+						catch(NFile::CExceptionFile const &)
 						{					
 						}
 
