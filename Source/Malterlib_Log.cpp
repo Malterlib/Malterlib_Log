@@ -12,6 +12,8 @@ namespace NMib
 
 	namespace NLog
 	{
+		using namespace NFile;
+
 #if DMibSysLogSeverities
 
 		CNullLogger::CNullLogger()
@@ -195,20 +197,20 @@ namespace NMib
 
 			try
 			{
-				if (NFile::CFile::fs_FileExists(_Path))
+				if (CFile::fs_FileExists(_Path))
 				{
-					Config = NFile::CFile::fs_ReadStringFromFile(_Path);
+					Config = CFile::fs_ReadStringFromFile(_Path);
 				}
 				else
 				{
 					CLogStr Path = CLogStr::CFormat("{}/{}") << fg_GetSys()->f_GetProgramRootNonTracked() << _Path;
-					if (NFile::CFile::fs_FileExists(Path))
-						Config = NFile::CFile::fs_ReadStringFromFile(Path);
+					if (CFile::fs_FileExists(Path))
+						Config = CFile::fs_ReadStringFromFile(Path);
 					else
 					{
-						CLogStr Path2 = CLogStr::CFormat("{}/{}") << NFile::CFile::fs_GetProgramDirectoryNonTracked() << _Path;
-						if (NFile::CFile::fs_FileExists(Path2))
-							Config = NFile::CFile::fs_ReadStringFromFile(Path2);
+						CLogStr Path2 = CLogStr::CFormat("{}/{}") << CFile::fs_GetProgramDirectoryNonTracked() << _Path;
+						if (CFile::fs_FileExists(Path2))
+							Config = CFile::fs_ReadStringFromFile(Path2);
 						else
 						{
 							return false;
@@ -216,7 +218,7 @@ namespace NMib
 					}
 				}
 			}
-			catch(NFile::CExceptionFile const&)
+			catch (CExceptionFile const &)
 			{
 				return false;
 			}
@@ -723,6 +725,102 @@ namespace NMib
 			m_Lock.f_Unlock();
 		}
 
+		namespace
+		{
+			static constexpr EFileOpen gc_LogOpenFlags = EFileOpen_Write | EFileOpen_DontTruncate | EFileOpen_Read | EFileOpen_ShareRead | EFileOpen_NoLocalCache;
+
+			bool fg_RenameLogFile(CLogStr const &_LogFile, CLogStr const &_DestPath, CLogStr const &_Name, CLogStr const &_Extension)
+			{
+#ifdef DPlatformFamily_Windows
+				static constexpr EFileOpen c_CheckOldOpenFlags = gc_LogOpenFlags;
+#else
+				static constexpr EFileOpen c_CheckOldOpenFlags = EFileOpen_Write | EFileOpen_DontTruncate | EFileOpen_Read | EFileOpen_NoLocalCache;
+#endif
+
+				if (!CFile::fs_FileExists(_LogFile, EFileAttrib_File))
+					return true;
+
+				NTime::CTime WriteTime;
+				{
+					// Check if old file is already opened
+					CFile TempFile;
+					TempFile.f_Open(_LogFile, c_CheckOldOpenFlags);
+					WriteTime = TempFile.f_GetWriteTime();
+				}
+
+				CLogStr NewLogName = CLogStr::CFormat("{}{}_{tsd_,tsb_,tst_,tss_}.{}") << _DestPath << _Name << WriteTime << _Extension;
+				if (CFile::fs_FileExists(NewLogName, EFileAttrib_File))
+				{
+					int iIndex = 0;
+					auto Formatter = CLogStr::CFormat("{}{}_{tsd_,tsb_,tst_,tss_}_{sj2,sf0}.{}");
+					Formatter << _DestPath << _Name << WriteTime << iIndex << _Extension;
+					for (; iIndex < 100; ++iIndex)
+					{
+						NewLogName = Formatter;
+						if (!CFile::fs_FileExists(NewLogName))
+							break;
+					}
+
+					if (iIndex >= 100)
+						return false;
+				}
+				CFile::fs_RenameFile(_LogFile, NewLogName);
+				return true;
+			}
+
+			void fg_RotateLogs(CLogStr const &_Directory, CLogStr const &_Name, CLogStr const &_Extension)
+			{
+				try
+				{
+					NTime::CTime OldestAllowed = NTime::CTime::fs_NowUTC() - NTime::CTimeSpanConvert::fs_CreateWeekSpan(1);
+					CFile::CFindFilesOptions FindOptions{NStr::fg_Format<CLogStr>("{}{}*.{}", _Directory, _Name, _Extension), false};
+					CLogStr ParseRotatedFile = NStr::fg_Format<CLogStr>("{}_{{}_{{}", _Name);
+					CLogStr HistoryDirectory = CFile::fs_AppendPath(_Directory, "Older/");
+
+					for (auto &Found : CFile::fs_FindFiles(FindOptions))
+					{
+						CLogStr FileName = CFile::fs_GetFile(Found.m_Path);
+
+						aint nFound = 0;
+						int64 Year = 0;
+						int64 Month = 0;
+
+						(CLogStr::CParse(ParseRotatedFile) >> Year >> Month).f_Parse(FileName, nFound);
+
+						bool bIsRotated = nFound > 1;
+
+						try
+						{
+							if (CFile::fs_GetWriteTime(Found.m_Path) < OldestAllowed)
+							{
+								if (bIsRotated)
+								{
+									CLogStr HistoryFileName = HistoryDirectory + FileName;
+									if (CFile::fs_FileExists(HistoryFileName))
+										fg_RenameLogFile(Found.m_Path, HistoryDirectory, _Name, _Extension);
+									else
+									{
+										CFile::fs_CreateDirectory(HistoryDirectory);
+										CFile::fs_RenameFile(Found.m_Path, HistoryFileName);
+									}
+								}
+								else
+									fg_RenameLogFile(Found.m_Path, HistoryDirectory, _Name, _Extension);
+							}
+							else if (!bIsRotated)
+								fg_RenameLogFile(Found.m_Path, _Directory, _Name, _Extension);
+						}
+						catch (CExceptionFile const &_Exception)
+						{
+						}
+					}
+				}
+				catch (CExceptionFile const &_Exception)
+				{
+				}
+			}
+		}
+
 		bint CLogFile::f_ReadyForWrite()
 		{
 			if (m_File.f_IsValid())
@@ -740,22 +838,15 @@ namespace NMib
 				m_bFilenameUsedTime = true;
 			}
 
-			m_Filename = NFile::CFile::fs_GetFile(m_Filename);
+			m_Filename = CFile::fs_GetFile(m_Filename);
 			CLogStr DestPath = m_Directory;
 			if (DestPath.f_IsEmpty())
-				DestPath = NFile::CFile::fs_GetLogDirectoryNonTracked();
+				DestPath = CFile::fs_GetLogDirectoryNonTracked();
 			
 			if (DestPath[DestPath.f_GetLen()-1] != '/')
 				DestPath += "/";
-			CLogStr Name = NFile::CFile::fs_GetFileNoExt(m_Filename);
-			CLogStr Extension = NFile::CFile::fs_GetExtension(m_Filename);
-
-			NFile::EFileOpen c_LogOpenFlags = NFile::EFileOpen_Write | NFile::EFileOpen_DontTruncate | NFile::EFileOpen_Read | NFile::EFileOpen_ShareRead | NFile::EFileOpen_NoLocalCache;
-#ifdef DPlatformFamily_Windows
-			NFile::EFileOpen c_CheckOldOpenFlags = c_LogOpenFlags;
-#else
-			NFile::EFileOpen c_CheckOldOpenFlags = NFile::EFileOpen_Write | NFile::EFileOpen_DontTruncate | NFile::EFileOpen_Read | NFile::EFileOpen_NoLocalCache;
-#endif
+			CLogStr Name = CFile::fs_GetFileNoExt(m_Filename);
+			CLogStr Extension = CFile::fs_GetExtension(m_Filename);
 
 			if (m_bFilenameUsedTime)
 			{
@@ -763,10 +854,10 @@ namespace NMib
 				CLogStr LogFile = DestPath + m_Filename;
 				try
 				{
-					NFile::CFile::fs_CreateDirectory(DestPath);
-					m_File.f_Open(LogFile, NFile::EFileOpen_Write | NFile::EFileOpen_Read | NFile::EFileOpen_ShareRead | NFile::EFileOpen_NoLocalCache);
+					CFile::fs_CreateDirectory(DestPath);
+					m_File.f_Open(LogFile, EFileOpen_Write | EFileOpen_Read | EFileOpen_ShareRead | EFileOpen_NoLocalCache);
 				}
-				catch(NFile::CExceptionFile const&)
+				catch (CExceptionFile const&)
 				{
 					return false;
 				}
@@ -785,81 +876,35 @@ namespace NMib
 					)
 				;
 				
-				auto fl_RenameLogFile
-					= [&](CLogStr const &_LogFile) -> bool
-					{
-						if (NFile::CFile::fs_FileExists(_LogFile, NFile::EFileAttrib_File))
-						{
-							// Check if old file is already opened
-							{
-								NFile::CFile TempFile;
-								TempFile.f_Open(_LogFile, c_CheckOldOpenFlags);
-							}
-
-							// First try to rename the old file
-
-							NTime::CTime WriteTime;
-							{
-								NFile::CFile File;
-								File.f_Open(_LogFile, NFile::EFileOpen_ReadAttribs);
-								WriteTime = File.f_GetWriteTime();
-							}
-							CLogStr TimeStr = NTime::fg_GetFullTimeStr(WriteTime);
-							TimeStr = TimeStr.f_Replace(":", "_");
-							TimeStr = TimeStr.f_Replace("/", "_");
-							TimeStr = TimeStr.f_Replace("\\", "_");
-							TimeStr = TimeStr.f_Replace(" ", "_");
-							TimeStr = TimeStr.f_Replace("-", "_");
-							
-							CLogStr NewLogName = CLogStr::CFormat("{}{}_{}.{}") << DestPath << Name << TimeStr << Extension;
-							if (NFile::CFile::fs_FileExists(NewLogName, NFile::EFileAttrib_File) || true)
-							{
-								int iIndex = 0;
-								auto Formatter = CLogStr::CFormat("{}{}_{}_{}.{}");
-								Formatter << DestPath << Name << TimeStr << iIndex << Extension;
-								for (; iIndex < 100; ++iIndex)
-								{
-									NewLogName = Formatter;
-									if (!NFile::CFile::fs_FileExists(NewLogName))
-										break;
-								}
-								
-								if (iIndex >= 100)
-									return false;
-							}
-							NFile::CFile::fs_RenameFile(_LogFile, NewLogName);
-						}
-						return true;
-					}
-				;
 				try
 				{
 					CLogStr LogFile = DestPath + m_Filename;
-					if (!fl_RenameLogFile(LogFile))
+					fg_RotateLogs(DestPath, Name, Extension);
+					if (!fg_RenameLogFile(LogFile, DestPath, Name, Extension))
 						return false;
-					NFile::CFile::fs_CreateDirectory(DestPath);
-					m_File.f_Open(LogFile, c_LogOpenFlags);
+					CFile::fs_CreateDirectory(DestPath);
+					m_File.f_Open(LogFile, gc_LogOpenFlags);
 					m_File.f_SetLength(0);
 					return true;
 				}
 				catch (NException::CException const &)
 				{
 					int iIndex = 0;
-					auto Formatter = CLogStr::CFormat("{}{}_{}.{}");
+					auto Formatter = CLogStr::CFormat("{}{}_{sj2,sf0}.{}");
 					Formatter << DestPath << Name << iIndex << Extension;
 
 					for (; iIndex < 100; ++iIndex)
 					{
 						CLogStr NewName = Formatter;
 						try
-						{							
-							if (!fl_RenameLogFile(NewName))
+						{
+							if (!fg_RenameLogFile(NewName, DestPath, Name, Extension))
 								continue;
-							NFile::CFile::fs_CreateDirectory(DestPath);
-							m_File.f_Open(NewName, c_LogOpenFlags);
+							CFile::fs_CreateDirectory(DestPath);
+							m_File.f_Open(NewName, gc_LogOpenFlags);
 							m_File.f_SetLength(0);
 						}
-						catch(NFile::CExceptionFile const &)
+						catch (CExceptionFile const &)
 						{					
 						}
 
@@ -895,7 +940,7 @@ namespace NMib
 			if (!pLogFile->f_ReadyForWrite())
 				return;
 
-			NFile::CFile* pFile = &pLogFile->m_File;
+			CFile* pFile = &pLogFile->m_File;
 
 			NTime::CTimeConvert::CDateTime DateTime;
 			NTime::CTimeConvert(_Time.f_ToLocal()).f_ExtractDateTime(DateTime);
