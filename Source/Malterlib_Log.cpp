@@ -810,12 +810,12 @@ namespace NMib
 							else if (!bIsRotated)
 								fg_RenameLogFile(Found.m_Path, _Directory, _Name, _Extension);
 						}
-						catch (CExceptionFile const &_Exception)
+						catch (CExceptionFile const &)
 						{
 						}
 					}
 				}
-				catch (CExceptionFile const &_Exception)
+				catch (CExceptionFile const &)
 				{
 				}
 			}
