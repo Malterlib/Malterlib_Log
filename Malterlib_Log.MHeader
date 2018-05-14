@@ -44,7 +44,7 @@ Property
 		!!MalterlibLibrary_Log true
 	}
 	
-	MalterlibLog_EnableVerboseDebugLog false // User: Enable verbose debug logs
+	MalterlibLog_EnableVerboseDebugLog false // User(Log)=true: Enable verbose debug logs. You can also specify specific severeties
 	{
 		!!MalterlibLog_EnableVerboseDebugLog ""
 	}
