@@ -194,6 +194,7 @@ namespace NMib::NLog
 		inline ~CSysLogCatScope();
 		CSysLogCatScope(CSysLogCatScope &&_Other) = default;
 
+		DMibThreadLocalScopeDebugMember;
 		CSystemLogger &m_SysLog;
 		ch8 const *m_pCategory;
 		DMibListLinkDS_Link(CSysLogCatScope, m_Link);
@@ -201,12 +202,12 @@ namespace NMib::NLog
 
 	struct CSysLogOpScope
 	{
-		CSystemLogger &m_SysLog;
-
 		inline CSysLogOpScope(CSystemLogger &_SysLog, char const *_pOperation);
 		inline ~CSysLogOpScope();
 		CSysLogOpScope(CSysLogOpScope &&_Other) = default;
 
+		DMibThreadLocalScopeDebugMember;
+		CSystemLogger &m_SysLog;
 		ch8 const *m_pOperation;
 		DMibListLinkDS_Link(CSysLogOpScope, m_Link);
 	};
