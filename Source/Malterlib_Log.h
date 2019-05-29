@@ -297,7 +297,7 @@ namespace NMib::NLog
 			return *this;
 		}
 
-		bint f_Test(
+		bool f_Test(
 				mint _ThreadID
 			,	NTime::CTime const& _Time
 			,	ESeverity _Sev
@@ -330,7 +330,7 @@ namespace NMib::NLog
 		CLogger();
 		~CLogger();
 
-		bint f_ReadConfig(CLogStr const& _Path);
+		bool f_ReadConfig(CLogStr const& _Path);
 
 		mint f_PushGlobalDestination(FLogDestination &&_fLog);
 		mint f_PushGlobalDestination(FLogDestination &&_fLog, CLogFilter&& _Filter);
@@ -376,7 +376,7 @@ namespace NMib::NLog
 		CNullLogger();
 		~CNullLogger();
 
-		bint f_ReadConfig(CLogStr const& _Path);
+		bool f_ReadConfig(CLogStr const& _Path);
 
 		mint f_PushGlobalDestination(FLogDestination &&_fLog);
 		mint f_PushGlobalDestination(FLogDestination &&_fLog, CLogFilter&& _Filter);

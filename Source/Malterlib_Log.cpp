@@ -20,7 +20,7 @@ namespace NMib::NLog
 	{
 	}
 
-	bint CNullLogger::f_ReadConfig(CLogStr const& _Path)
+	bool CNullLogger::f_ReadConfig(CLogStr const& _Path)
 	{
 		return false;
 	}
@@ -188,7 +188,7 @@ namespace NMib::NLog
 		mp_pD->mp_GlobalDestLock.f_Unlock();
 	}
 
-	bint CLogger::f_ReadConfig(CLogStr const& _Path)
+	bool CLogger::f_ReadConfig(CLogStr const& _Path)
 	{
 		CLogStr Config;
 
@@ -508,7 +508,7 @@ namespace NMib::NLog
 
 	// CLogFilter
 
-	bint CLogFilter::f_Test(
+	bool CLogFilter::f_Test(
 			mint _ThreadID
 		,	NTime::CTime const& _Time
 		,	ESeverity _Sev
@@ -819,7 +819,7 @@ namespace NMib::NLog
 		}
 	}
 
-	bint CLogFile::f_ReadyForWrite()
+	bool CLogFile::f_ReadyForWrite()
 	{
 		if (m_File.f_IsValid())
 			return true;

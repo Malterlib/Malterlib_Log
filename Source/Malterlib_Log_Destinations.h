@@ -36,13 +36,13 @@ namespace NMib::NLog
 	{
 		CLogStr m_Filename;
 		CLogStr m_Directory;
-		bint m_bFilenameUsedTime;
+		bool m_bFilenameUsedTime;
 		NFile::CFile m_File;
 		NThread::CMutual m_Lock;
 
 		CLogFile();
 		~CLogFile();
-		bint f_ReadyForWrite();
+		bool f_ReadyForWrite();
 
 		void f_PrepareFork();
 		void f_ForkedChild();
