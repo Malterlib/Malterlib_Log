@@ -5,9 +5,9 @@ Import "../Core/Lib_Malterlib.MTarget"
 
 %Group "{Malterlib}/{Lib_Malterlib_Log}"
 {
-	%Group Log
+	%Group "Log"
 	{
-		%Group Include
+		%Group "Include"
 		{
 			Compile.Type "C++"
 			{
@@ -16,7 +16,7 @@ Import "../Core/Lib_Malterlib.MTarget"
 			%File "Include/Mib/Log/^*"
 		}
 		%File "Source/*"
-		%Group Documentation
+		%Group "Documentation"
 		{
 			%File "Documentation/*"
 		}
@@ -56,8 +56,8 @@ Property
 			MalterlibLog_Severities ""
 			|
 			{
-				Config Release
-				Config Optimized
+				Config "Release"
+				Config "Optimized"
 			}
 		}
 	}
@@ -129,13 +129,13 @@ Compile
 		&
 		{
 			!MalterlibLog_Severities ""
-			!Documentation Doxygen
+			!Documentation "Doxygen"
 		}
 	}
 	
 	PreprocessorDefines "DMibSysLogSeverities=0xffff;@(Compile.PreprocessorDefines)"
 	{
-		!!Documentation Doxygen
+		!!Documentation "Doxygen"
 	}
 }
 	
