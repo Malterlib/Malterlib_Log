@@ -26,114 +26,99 @@ Import "../Core/Lib_Malterlib.MTarget"
 
 Property
 {
-	MalterlibLibrary_Log true
-	{
-		&
-		{
-			MalterlibLibrary_Log ""
-			MalterlibLibrary_All true
-		}
-	}
-	MalterlibSubLibraries "Log;@(MalterlibSubLibraries)"
+	MalterlibLibrary_Log define bool = MalterlibLibrary_All
+	MalterlibSubLibraries =+ "Log"
 	{
 		!!MalterlibLibrary_Log true
 	}
-//	MalterlibSubLibrarySeparate_Lib_Malterlib_Log true
-	MalterlibIncludeRoots "@('Include'->MakeAbsolute());@(MalterlibIncludeRoots)"
+//	MalterlibSubLibrarySeparate_Lib_Malterlib_Log define bool = true
+	MalterlibIncludeRoots =+ "Include"->MakeAbsolute()
 	{
 		!!MalterlibLibrary_Log true
 	}
 	
-	MalterlibLog_EnableVerboseDebugLog false // User(Log)=true: Enable verbose debug logs. You can also specify specific severeties
-	{
-		!!MalterlibLog_EnableVerboseDebugLog ""
-	}
-	
-	MalterlibLog_Severities "None"
+	MalterlibLog_EnableVerboseDebugLog define one_of(bool, [string]) = false // User(Log)=true: Enable verbose debug logs. You can also specify specific severeties
+
+	MalterlibLog_Severities define [string]
+
+	MalterlibLog_Severities []
 	{
 		&
 		{
-			MalterlibLog_Severities ""
+			MalterlibLog_Severities undefined
 			|
 			{
-				Config "Release"
-				Config "Optimized"
+				Configuration "Release"
+				Configuration "Optimized"
 			}
 		}
 	}
 	
-	MalterlibLog_Severities "Error;Critical;Warning;Info;Debug"
+	MalterlibLog_Severities ["Error", "Critical", "Warning", "Info", "Debug"]
 	{
 		&
 		{
-			MalterlibLog_Severities ""
-			Config "Release Testing"
+			MalterlibLog_Severities undefined
+			Configuration "Release Testing"
 		}
 	}
 	
-	MalterlibLog_Severities "Error;Critical;Perf_Info;Perf_Warning;Perf_Error"
+	MalterlibLog_Severities ["Error", "Critical", "Perf_Info", "Perf_Warning", "Perf_Error"]
 	{
 		&
 		{
-			MalterlibLog_Severities ""
-			Config "Profile"
+			MalterlibLog_Severities undefined
+			Configuration "Profile"
 		}
 	}
 
-	MalterlibLog_Severities "AllNoPerfNoVerbose"
+	MalterlibLog_Severities ["AllNoPerfNoVerbose"]
 	{
 		&
 		{
-			MalterlibLog_Severities ""
+			MalterlibLog_Severities undefined
 			DebugCode true
 		}
 	}
 
-	MalterlibLog_Severities "Warning;Error;Critical"
+	MalterlibLog_Severities ["Warning", "Error", "Critical"]
 	{
-		&
-		{
-			MalterlibLog_Severities ""
-		}
+		!!MalterlibLog_Severities undefined
 	}
-	
-	MalterlibLog_Severities_Expand_Template "|DMibLogSeverity_@(Explodee)"
-	{
-		!Explodee ""
-	}
-	
-	MalterlibLog_Severities_Expand "DMibSysLogSeverities=(DMibLogSeverity_None@(Builtin.Function->ExplodeList('@(MalterlibLog_Severities)', ';', 'MalterlibLog_Severities_Expand_Template')))"
-	
-	MalterlibLog_Severities "AllNoPerf"
+
+	MalterlibLog_Severities ["AllNoPerf"]
 	{
 		!!MalterlibLog_EnableVerboseDebugLog true
 	}
 
-	MalterlibLog_Severities "@(MalterlibLog_EnableVerboseDebugLog)"
+	MalterlibLog_Severities MalterlibLog_EnableVerboseDebugLog
 	{
 		&
 		{
 			!MalterlibLog_EnableVerboseDebugLog false
 			!MalterlibLog_EnableVerboseDebugLog true
-			!MalterlibLog_EnableVerboseDebugLog ""
+			!MalterlibLog_EnableVerboseDebugLog undefined
 		}
 	}
+
+	MalterlibLog_Severities_Expand_Template function(string _Severity) string = ""
+	MalterlibLog_Severities_Expand_Template =+ `|DMibLogSeverity_@(_Severity)`
 }
 
 Compile
 {
 	!!CompileDialect "C"
 	
-	PreprocessorDefines "@(MalterlibLog_Severities_Expand);@(Compile.PreprocessorDefines)"
+	PreprocessorDefines += `DMibSysLogSeverities=(DMibLogSeverity_None@(MalterlibLog_Severities->ForEach("MalterlibLog_Severities_Expand_Template")))`
 	{
 		&
 		{
-			!MalterlibLog_Severities ""
+			!MalterlibLog_Severities undefined
 			!Documentation "Doxygen"
 		}
 	}
 	
-	PreprocessorDefines "DMibSysLogSeverities=0xffff;@(Compile.PreprocessorDefines)"
+	PreprocessorDefines += "DMibSysLogSeverities=0xffff"
 	{
 		!!Documentation "Doxygen"
 	}
@@ -143,7 +128,7 @@ Property
 {
 	!!MalterlibEnableInternalTests true
 	
-	MalterlibTests "Malterlib_Log;@(MalterlibTests)"
-	//MalterlibTestFiles_Malterlib_Log "@('Test/*'->MakeAbsolute())"
+	MalterlibTests =+ "Malterlib_Log"
+	//MalterlibTestFiles_Malterlib_Log define [type(CEntity)] = ["Test/*"->MakeAbsolute()]
 }
 
