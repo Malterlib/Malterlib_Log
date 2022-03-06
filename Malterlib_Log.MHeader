@@ -26,20 +26,20 @@ Import "../Core/Lib_Malterlib.MTarget"
 
 Property
 {
-	MalterlibLibrary_Log define bool = MalterlibLibrary_All
+	MalterlibLibrary_Log: bool = MalterlibLibrary_All
 	MalterlibSubLibraries =+ "Log"
 	{
 		!!MalterlibLibrary_Log true
 	}
-//	MalterlibSubLibrarySeparate_Lib_Malterlib_Log define bool = true
+//	MalterlibSubLibrarySeparate_Lib_Malterlib_Log: bool = true
 	MalterlibIncludeRoots =+ "Include"->MakeAbsolute()
 	{
 		!!MalterlibLibrary_Log true
 	}
 	
-	MalterlibLog_EnableVerboseDebugLog define one_of(bool, [string]) = false // User(Log)=true: Enable verbose debug logs. You can also specify specific severeties
+	MalterlibLog_EnableVerboseDebugLog: one_of(bool, [string]) = false // User(Log)=true: Enable verbose debug logs. You can also specify specific severeties
 
-	MalterlibLog_Severities define [one_of(
+	MalterlibLog_Severities: [one_of(
 		"Critical"
 		, "Error"
 		, "Warning"
@@ -124,7 +124,7 @@ Compile
 {
 	!!CompileDialect "C"
 	
-	PreprocessorDefines += `DMibSysLogSeverities=(DMibLogSeverity_None@(MalterlibLog_Severities->ForEach("MalterlibLog_Severities_Expand_Template")))`
+	PreprocessorDefines += `DMibSysLogSeverities=(DMibLogSeverity_None@(MalterlibLog_Severities->ForEach(&MalterlibLog_Severities_Expand_Template)))`
 	{
 		&
 		{
@@ -144,6 +144,6 @@ Property
 	!!MalterlibEnableInternalTests true
 	
 	MalterlibTests =+ "Malterlib_Log"
-	//MalterlibTestFiles_Malterlib_Log define [type(CEntity)] = ["Test/*"->MakeAbsolute()]
+	//MalterlibTestFiles_Malterlib_Log: [type(CEntity)] = ["Test/*"->MakeAbsolute()]
 }
 
