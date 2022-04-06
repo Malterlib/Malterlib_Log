@@ -188,25 +188,27 @@ namespace NMib::NLog
 		typedef CNullLogger CSystemLogger;
 	#endif
 
-	struct CSysLogCatScope
+	struct CSysLogCatScope : public CCoroutineThreadLocalHandler
 	{
 		inline CSysLogCatScope(CSystemLogger &_SysLog, char const *_pCategory);
 		inline ~CSysLogCatScope();
-		CSysLogCatScope(CSysLogCatScope &&_Other) = default;
+		CSysLogCatScope(CSysLogCatScope &&_Other);
+		void f_Suspend() override;
+		void f_Resume() override;
 
-		DMibThreadLocalScopeDebugMember;
 		CSystemLogger &m_SysLog;
 		ch8 const *m_pCategory;
 		DMibListLinkDS_Link(CSysLogCatScope, m_Link);
 	};
 
-	struct CSysLogOpScope
+	struct CSysLogOpScope : public CCoroutineThreadLocalHandler
 	{
 		inline CSysLogOpScope(CSystemLogger &_SysLog, char const *_pOperation);
 		inline ~CSysLogOpScope();
-		CSysLogOpScope(CSysLogOpScope &&_Other) = default;
+		CSysLogOpScope(CSysLogOpScope &&_Other);
+		void f_Suspend() override;
+		void f_Resume() override;
 
-		DMibThreadLocalScopeDebugMember;
 		CSystemLogger &m_SysLog;
 		ch8 const *m_pOperation;
 		DMibListLinkDS_Link(CSysLogOpScope, m_Link);
@@ -256,23 +258,14 @@ namespace NMib::NLog
 
 	struct CLogFilter
 	{
+		CLogFilter() = default;
 
-		ESeverity m_Severity; // Bit field.
-		CLogStr m_Category;
-		CLogStr m_Operation;
-		CLogStr m_File;
-
-		CLogFilter()
-			: m_Severity(ESeverity_None)
-		{
-		}
-
-		// _FilterOnSeverity is a bitfield.
-		CLogFilter(
-					ESeverity _FilterOnSeverity
-				,	CLogStr const& _FilterOnCategory = CLogStr()
-				,	CLogStr const& _FilterOnOperation = CLogStr()
-				,	CLogStr const& _FilterOnFile = CLogStr()
+		CLogFilter
+			(
+				ESeverity _FilterOnSeverity
+				, CLogStr const &_FilterOnCategory = {}
+				, CLogStr const &_FilterOnOperation = {}
+				, CLogStr const &_FilterOnFile = {}
 			)
 			: m_Severity(_FilterOnSeverity)
 			, m_Category(_FilterOnCategory)
@@ -281,31 +274,27 @@ namespace NMib::NLog
 		{
 		}
 
-		CLogFilter(CLogFilter&& _ToMove)
-			: m_Severity(_ToMove.m_Severity)
-			, m_Category(fg_Move(_ToMove.m_Category))
-			, m_Operation(fg_Move(_ToMove.m_Operation))
-			, m_File(fg_Move(_ToMove.m_File))
-		{}
+		CLogFilter(CLogFilter const &) = default;
+		CLogFilter(CLogFilter &&) = default;
+		CLogFilter &operator=(CLogFilter &&) = default;
+		CLogFilter &operator=(CLogFilter const &) = default;
 
-		CLogFilter& operator=(CLogFilter&& _ToMove)
-		{
-			m_Severity = _ToMove.m_Severity;
-			m_Category = fg_Move(_ToMove.m_Category);
-			m_Operation = fg_Move(_ToMove.m_Operation);
-			m_File = fg_Move(_ToMove.m_File);
-			return *this;
-		}
-
-		bool f_Test(
+		bool f_Test
+			(
 				mint _ThreadID
-			,	NTime::CTime const& _Time
-			,	ESeverity _Sev
-			, 	CLogStr const& _Message
-			,	NContainer::TCVector<NStr::CStr> const &_Categories
-			,	NContainer::TCVector<NStr::CStr> const &_Operations
-			,	CLogLocationTag const& _Loc
-		);
+				, NTime::CTime const &_Time
+				, ESeverity _Sev
+				, CLogStr const &_Message
+				, NContainer::TCVector<NStr::CStr> const &_Categories
+				, NContainer::TCVector<NStr::CStr> const &_Operations
+				, CLogLocationTag const &_Loc
+			)
+		;
+
+		ESeverity m_Severity = ESeverity_None;
+		CLogStr m_Category;
+		CLogStr m_Operation;
+		CLogStr m_File;
 	};
 
 	#define DLogLocTag NMib::NLog::CLogLocationTag(__FILE__, __LINE__)
@@ -338,7 +327,7 @@ namespace NMib::NLog
 		void f_RemoveGlobalDestination(mint _ID);
 
 		void f_PushDestination(FLogDestination &&_fLog);
-		void f_PushDestination(FLogDestination &&_fLog, CLogFilter&& _Filter);
+		void f_PushDestination(FLogDestination &&_fLog, CLogFilter const &_Filter);
 		void f_PopDestination();
 
 		void f_PushCategoryScope(CSysLogCatScope &_Scope);
@@ -384,7 +373,7 @@ namespace NMib::NLog
 		void f_RemoveGlobalDestination(mint _ID);
 
 		void f_PushDestination(FLogDestination &&_fLog);
-		void f_PushDestination(FLogDestination &&_fLog, CLogFilter&& _Filter);
+		void f_PushDestination(FLogDestination &&_fLog, CLogFilter const &_Filter);
 		void f_PopDestination();
 
 		void f_PushCategoryScope(CSysLogCatScope &_Scope);

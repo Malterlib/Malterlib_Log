@@ -69,11 +69,12 @@ namespace NMib::NLog
 		CLogFile *mp_pLogFile;
 	};
 
-	struct CLogToFile
+	struct CLogToFile : public CCoroutineThreadLocalHandler
 	{
 	private:
 		CLogger &mp_Logger;
 		CLogFile mp_File;
+		CLogFilter mp_Filter;
 
 	public:
 
@@ -84,16 +85,27 @@ namespace NMib::NLog
 			mp_Logger.f_PushDestination(CFileLogger(&mp_File));
 		}
 
-		CLogToFile(CLogger& _Logger, CLogStr const& _File, CLogFilter&& _Filter)
+		CLogToFile(CLogger &_Logger, CLogStr const &_File, CLogFilter &&_Filter)
 			: mp_Logger(_Logger)
+			, mp_Filter(fg_Move(_Filter))
 		{
 			mp_File.m_Filename = _File;
-			mp_Logger.f_PushDestination(CFileLogger(&mp_File), fg_Move(_Filter));
+			mp_Logger.f_PushDestination(CFileLogger(&mp_File), mp_Filter);
 		}
 
 		~CLogToFile()
 		{
 			mp_Logger.f_PopDestination();
+		}
+
+		void f_Suspend() override
+		{
+			mp_Logger.f_PopDestination();
+		}
+
+		void f_Resume() override
+		{
+			mp_Logger.f_PushDestination(CFileLogger(&mp_File), mp_Filter);
 		}
 	};
 

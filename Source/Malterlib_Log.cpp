@@ -12,6 +12,29 @@ namespace NMib::NLog
 	using namespace NFile;
 
 #if DMibSysLogSeverities
+	CSysLogOpScope::CSysLogOpScope(CSysLogOpScope &&_Other) = default;
+
+	void CSysLogOpScope::f_Suspend()
+	{
+		m_SysLog.f_PopOperationScope(*this);
+	}
+
+	void CSysLogOpScope::f_Resume()
+	{
+		m_SysLog.f_PushOperationScope(*this);
+	}
+
+	CSysLogCatScope::CSysLogCatScope(CSysLogCatScope &&_Other) = default;
+
+	void CSysLogCatScope::f_Suspend()
+	{
+		m_SysLog.f_PopCategoryScope(*this);
+	}
+
+	void CSysLogCatScope::f_Resume()
+	{
+		m_SysLog.f_PushCategoryScope(*this);
+	}
 
 	CNullLogger::CNullLogger()
 	{
@@ -48,7 +71,7 @@ namespace NMib::NLog
 	{
 	}
 
-	void CNullLogger::f_PushDestination(FLogDestination &&_fLog, CLogFilter&& _Filter)
+	void CNullLogger::f_PushDestination(FLogDestination &&_fLog, CLogFilter const &_Filter)
 	{
 	}
 
@@ -370,11 +393,11 @@ namespace NMib::NLog
 		NewDest.m_fLog = fg_Move(_fLog);
 	}
 
-	void CLogger::f_PushDestination(FLogDestination &&_fLog, CLogFilter&& _Filter)
+	void CLogger::f_PushDestination(FLogDestination &&_fLog, CLogFilter const &_Filter)
 	{
 		CDetails::CDestination& NewDest = *((*mp_pD->mp_ThreadInfo).m_lDestinations.f_Insert() = fg_Construct());
 		NewDest.m_fLog = fg_Move(_fLog);
-		NewDest.m_Filter = fg_Move(_Filter);
+		NewDest.m_Filter = _Filter;
 	}
 
 	void CLogger::f_PopDestination()
