@@ -321,7 +321,7 @@ namespace NMib::NLog
 
 		bool f_ReadConfig(CLogStr const& _Path);
 
-		mint f_PushGlobalDestination(FLogDestination &&_fLog);
+		mint f_PushGlobalDestination(FLogDestination &&_fLog, bool _bUseDispatcher = true);
 		mint f_PushGlobalDestination(FLogDestination &&_fLog, CLogFilter&& _Filter);
 		bool f_PopGlobalDestination();
 		void f_RemoveGlobalDestination(mint _ID);

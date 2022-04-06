@@ -160,6 +160,7 @@ namespace NMib::NLog
 		{
 			FLogDestination m_fLog;
 			CLogFilter m_Filter;
+			bool m_bUseDispatcher = true;
 		};
 
 		struct CThreadInfo
@@ -169,7 +170,7 @@ namespace NMib::NLog
 
 			DMibListLinkDS_List(CSysLogCatScope, m_Link) m_CategoryStack;
 			DMibListLinkDS_List(CSysLogOpScope, m_Link) m_OperationStack;
-			NContainer::TCVector<NStorage::TCSharedPointer<CDestination, NMemory::CAllocator_NonTrackedHeap>, NMemory::CAllocator_NonTrackedHeap> m_lDestinations;
+			NContainer::TCVector<NStorage::TCSharedPointer<CDestination, NMemory::CAllocator_NonTrackedHeap>, NMemory::CAllocator_NonTrackedHeap> m_Destinations;
 		};
 
 		NThread::TCThreadLocal<CThreadInfo, NMemory::CAllocator_NonTrackedHeap> mp_ThreadInfo;
@@ -353,11 +354,12 @@ namespace NMib::NLog
 		}
 	}
 
-	mint CLogger::f_PushGlobalDestination(FLogDestination &&_fLog)
+	mint CLogger::f_PushGlobalDestination(FLogDestination &&_fLog, bool _bUseDispatcher)
 	{
 		DMibLock(mp_pD->mp_GlobalDestLock);
 		mint ID = ++mp_pD->mp_NextGlobalDestinationID;
-		CDetails::CDestination& NewDest = *(mp_pD->mp_GlobalDestinations[ID] = fg_Construct());
+		CDetails::CDestination &NewDest = *(mp_pD->mp_GlobalDestinations[ID] = fg_Construct());
+		NewDest.m_bUseDispatcher = _bUseDispatcher;
 		NewDest.m_fLog = fg_Move(_fLog);
 		return ID;
 	}
@@ -389,20 +391,20 @@ namespace NMib::NLog
 
 	void CLogger::f_PushDestination(FLogDestination &&_fLog)
 	{
-		CDetails::CDestination& NewDest = *((*mp_pD->mp_ThreadInfo).m_lDestinations.f_Insert() = fg_Construct());
+		CDetails::CDestination& NewDest = *((*mp_pD->mp_ThreadInfo).m_Destinations.f_Insert() = fg_Construct());
 		NewDest.m_fLog = fg_Move(_fLog);
 	}
 
 	void CLogger::f_PushDestination(FLogDestination &&_fLog, CLogFilter const &_Filter)
 	{
-		CDetails::CDestination& NewDest = *((*mp_pD->mp_ThreadInfo).m_lDestinations.f_Insert() = fg_Construct());
+		CDetails::CDestination& NewDest = *((*mp_pD->mp_ThreadInfo).m_Destinations.f_Insert() = fg_Construct());
 		NewDest.m_fLog = fg_Move(_fLog);
 		NewDest.m_Filter = _Filter;
 	}
 
 	void CLogger::f_PopDestination()
 	{
-		(*mp_pD->mp_ThreadInfo).m_lDestinations.f_Pop();
+		(*mp_pD->mp_ThreadInfo).m_Destinations.f_Pop();
 	}
 
 	void CLogger::f_PushCategoryScope(CSysLogCatScope &_Scope)
@@ -477,7 +479,7 @@ namespace NMib::NLog
 							)
 						)
 					{
-						if (Details.mp_Dispatcher)
+						if (Details.mp_Dispatcher && Destination.m_bUseDispatcher)
 						{
 							Details.mp_Dispatcher
 								(
@@ -518,13 +520,13 @@ namespace NMib::NLog
 		;
 		{
 			DMibLockRead(Details.mp_GlobalDestLock);
-			if (ThreadInfo.m_lDestinations.f_IsEmpty() && Details.mp_GlobalDestinations.f_IsEmpty())
+			if (ThreadInfo.m_Destinations.f_IsEmpty() && Details.mp_GlobalDestinations.f_IsEmpty())
 				return;
 
 			auto Cats = ThreadInfo.f_GetCategoryScopeStack();
 			auto Ops = ThreadInfo.f_GetOperationScopeStack();
 
-			fSendToDests(ThreadInfo.m_lDestinations, Cats, Ops);
+			fSendToDests(ThreadInfo.m_Destinations, Cats, Ops);
 			fSendToDests(Details.mp_GlobalDestinations, Cats, Ops);
 		}
 	}
