@@ -172,7 +172,9 @@ namespace NMib::NLog
 
 		, ESeverity_Critical		= DMibBit(9)
 
-		, ESeverity_All				= DMibBit(10) - 1	 // Only to be used in filters
+		, ESeverity_DebugVerbose3	= DMibBit(10)
+
+		, ESeverity_All				= DMibBit(11) - 1	 // Only to be used in filters
 	};
 
 	typedef NStr::CStrNonTracked CLogStr;
@@ -428,6 +430,12 @@ namespace NMib::NLog
 		#define DMibLog_DebugVerbose2(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_DebugVerbose2, __VA_ARGS__)
 	#else
 		#define DMibLog_DebugVerbose2(...) (void)0
+	#endif
+
+	#if (DMibSysLogSeverities) & DMibLogSeverity_DebugVerbose3
+		#define DMibLog_DebugVerbose3(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_DebugVerbose3, __VA_ARGS__)
+	#else
+		#define DMibLog_DebugVerbose3(...) (void)0
 	#endif
 
 	#if (DMibSysLogSeverities) & DMibLogSeverity_Info

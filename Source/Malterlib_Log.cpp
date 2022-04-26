@@ -609,6 +609,8 @@ namespace NMib::NLog
 				return "DebugV1";
 			case ESeverity_DebugVerbose2:
 				return "DebugV2";
+			case ESeverity_DebugVerbose3:
+				return "DebugV3";
 			case ESeverity_Info:
 				return "Info";
 			case ESeverity_Warning:
@@ -640,6 +642,8 @@ namespace NMib::NLog
 			return ESeverity_DebugVerbose1;
 		else if (_Name.f_CmpNoCase("DebugV2") == 0)
 			return ESeverity_DebugVerbose2;
+		else if (_Name.f_CmpNoCase("DebugV3") == 0)
+			return ESeverity_DebugVerbose3;
 		else if (_Name.f_CmpNoCase("Info") == 0)
 			return ESeverity_Info;
 		else if (_Name.f_CmpNoCase("Warning") == 0)

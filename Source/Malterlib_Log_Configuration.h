@@ -18,8 +18,9 @@
 #define DMibLogSeverity_Perf_Warning	128
 #define DMibLogSeverity_Perf_Error		256
 #define DMibLogSeverity_Critical		512
-#define DMibLogSeverity_All			(1 | 2 | 4 | 8 | 16 | 32 | 64 | 128 | 256 | 512)
-#define DMibLogSeverity_AllNoPerfNoVerbose (DMibLogSeverity_All & ~(DMibLogSeverity_Perf_Info | DMibLogSeverity_Perf_Warning | DMibLogSeverity_Perf_Error | DMibLogSeverity_DebugVerbose1 | DMibLogSeverity_DebugVerbose2))
+#define DMibLogSeverity_DebugVerbose3	1024
+#define DMibLogSeverity_All			(1 | 2 | 4 | 8 | 16 | 32 | 64 | 128 | 256 | 512 | 1024)
+#define DMibLogSeverity_AllNoPerfNoVerbose (DMibLogSeverity_All & ~(DMibLogSeverity_Perf_Info | DMibLogSeverity_Perf_Warning | DMibLogSeverity_Perf_Error | DMibLogSeverity_DebugVerbose1 | DMibLogSeverity_DebugVerbose2 | DMibLogSeverity_DebugVerbose3))
 #define DMibLogSeverity_AllNoPerf (DMibLogSeverity_All & ~(DMibLogSeverity_Perf_Info | DMibLogSeverity_Perf_Warning | DMibLogSeverity_Perf_Error))
 
 // Define DMibSysLogSeverities to specify which severities to log.
