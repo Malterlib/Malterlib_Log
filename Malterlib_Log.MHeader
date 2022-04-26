@@ -39,7 +39,22 @@ Property
 	
 	MalterlibLog_EnableVerboseDebugLog define one_of(bool, [string]) = false // User(Log)=true: Enable verbose debug logs. You can also specify specific severeties
 
-	MalterlibLog_Severities define [string]
+	MalterlibLog_Severities define [one_of(
+		"Critical"
+		, "Error"
+		, "Warning"
+		, "Info"
+		, "Debug"
+		, "DebugVerbose1"
+		, "DebugVerbose2"
+		, "DebugVerbose3"
+		, "Perf_Info"
+		, "Perf_Warning"
+		, "Perf_Error"
+		, "All"
+		, "AllNoPerfNoVerbose"
+		, "AllNoPerf"
+	)]
 
 	MalterlibLog_Severities []
 	{
