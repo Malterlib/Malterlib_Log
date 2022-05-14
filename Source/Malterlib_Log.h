@@ -179,8 +179,27 @@ namespace NMib::NLog
 
 	typedef NStr::CStrNonTracked CLogStr;
 
-#if DMibSysLogSeverities
+	struct CLogLocationTag
+	{
+		CLogLocationTag() = default;
 
+		CLogLocationTag(ch8 const *_pFile, int _Line)
+			: m_pFile(_pFile)
+			, m_Line(_Line)
+		{
+		}
+
+		CLogLocationTag(CLogLocationTag const& _ToCopy)
+			: m_pFile(_ToCopy.m_pFile)
+			, m_Line(_ToCopy.m_Line)
+		{
+		}
+
+		ch8 const *m_pFile = nullptr;
+		int m_Line = 0;
+	};
+
+#if DMibSysLogSeverities
 	class CLogger;
 	class CNullLogger;
 
@@ -214,27 +233,6 @@ namespace NMib::NLog
 		CSystemLogger &m_SysLog;
 		ch8 const *m_pOperation;
 		DMibListLinkDS_Link(CSysLogOpScope, m_Link);
-	};
-
-	struct CLogLocationTag
-	{
-		char const* m_pFile;
-		int m_Line;
-
-		CLogLocationTag()
-			: m_pFile(nullptr)
-			, m_Line(0)
-		{}
-
-		CLogLocationTag(char const* _pFile, int _Line)
-			: m_pFile(_pFile)
-			, m_Line(_Line)
-		{}
-
-		CLogLocationTag(CLogLocationTag const& _ToCopy)
-			: m_pFile(_ToCopy.m_pFile)
-			, m_Line(_ToCopy.m_Line)
-		{}
 	};
 
 	using FLogDestination = NFunction::TCFunctionMovable
