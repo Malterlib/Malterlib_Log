@@ -8,24 +8,28 @@ namespace NMib::NLog
 		: m_SysLog(_SysLog)
 		, m_pCategory(_pCategory)
 	{
-		m_SysLog.f_PushCategoryScope(*this);
+		if (*m_pCategory)
+			m_SysLog.f_PushCategoryScope(*this);
 	}
 
 	CSysLogCatScope::~CSysLogCatScope()
 	{
-		m_SysLog.f_PopCategoryScope(*this);
+		if (*m_pCategory)
+			m_SysLog.f_PopCategoryScope(*this);
 	}
 
 	CSysLogOpScope::CSysLogOpScope(CSystemLogger &_SysLog, char const *_pOperation)
 		: m_SysLog(_SysLog)
 		, m_pOperation(_pOperation)
 	{
-		m_SysLog.f_PushOperationScope(*this);
+		if (*m_pOperation)
+			m_SysLog.f_PushOperationScope(*this);
 	}
 
 	CSysLogOpScope::~CSysLogOpScope()
 	{
-		m_SysLog.f_PopOperationScope(*this);
+		if (*m_pOperation)
+			m_SysLog.f_PopOperationScope(*this);
 	}
 #endif
 }
