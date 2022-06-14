@@ -199,6 +199,9 @@ namespace NMib::NLog
 		int m_Line = 0;
 	};
 
+	char const* fg_GetSeverityName(ESeverity _Sev);
+	ESeverity fg_LookupSeverity(CLogStr const& _Name);
+
 #if DMibSysLogSeverities
 	class CLogger;
 	class CNullLogger;
@@ -402,9 +405,6 @@ namespace NMib::NLog
 	{
 		NMib::fg_GetSys()->f_GetLogger().f_Log(_Loc, _Sev, NStr::fg_Format<CLogStr>(fg_Forward<tf_CMessage>(_Msg), fg_Forward<tfp_CArgs>(p_Args)...));
 	}
-
-	char const* fg_GetSeverityName(ESeverity _Sev);
-	ESeverity fg_LookupSeverity(CLogStr const& _Name);
 
 #endif
 // Internal Macros:

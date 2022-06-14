@@ -11,6 +11,69 @@ namespace NMib::NLog
 {
 	using namespace NFile;
 
+	char const *fg_GetSeverityName(ESeverity _Sev)
+	{
+		switch(_Sev)
+		{
+			case ESeverity_None:
+				return "None";
+			case ESeverity_Debug:
+				return "Debug";
+			case ESeverity_DebugVerbose1:
+				return "DebugV1";
+			case ESeverity_DebugVerbose2:
+				return "DebugV2";
+			case ESeverity_DebugVerbose3:
+				return "DebugV3";
+			case ESeverity_Info:
+				return "Info";
+			case ESeverity_Warning:
+				return "Warning";
+			case ESeverity_Error:
+				return "Error";
+			case ESeverity_Perf_Info:
+				return "PInfo";
+			case ESeverity_Perf_Warning:
+				return "PWarning";
+			case ESeverity_Perf_Error:
+				return "PError";
+			case ESeverity_Critical:
+				return "Critical";
+			default:
+				return "Unknown";
+		}
+	}
+
+	ESeverity fg_LookupSeverity(CLogStr const& _Name)
+	{
+		if (_Name.f_CmpNoCase("None") == 0)
+			return ESeverity_None;
+		else if (_Name.f_CmpNoCase("All") == 0)
+			return ESeverity_All;
+		else if (_Name.f_CmpNoCase("Debug") == 0)
+			return ESeverity_Debug;
+		else if (_Name.f_CmpNoCase("DebugV1") == 0)
+			return ESeverity_DebugVerbose1;
+		else if (_Name.f_CmpNoCase("DebugV2") == 0)
+			return ESeverity_DebugVerbose2;
+		else if (_Name.f_CmpNoCase("DebugV3") == 0)
+			return ESeverity_DebugVerbose3;
+		else if (_Name.f_CmpNoCase("Info") == 0)
+			return ESeverity_Info;
+		else if (_Name.f_CmpNoCase("Warning") == 0)
+			return ESeverity_Warning;
+		else if (_Name.f_CmpNoCase("Error") == 0)
+			return ESeverity_Error;
+		else if (_Name.f_CmpNoCase("Perf_Info") == 0)
+			return ESeverity_Perf_Info;
+		else if (_Name.f_CmpNoCase("Perf_Warning") == 0)
+			return ESeverity_Perf_Warning;
+		else if (_Name.f_CmpNoCase("Critical") == 0)
+			return ESeverity_Critical;
+		else
+			return ESeverity_None;
+	}
+
 #if DMibSysLogSeverities
 	CSysLogOpScope::CSysLogOpScope(CSysLogOpScope &&_Other) = default;
 
@@ -596,69 +659,6 @@ namespace NMib::NLog
 	}
 
 	// Global
-
-	char const *fg_GetSeverityName(ESeverity _Sev)
-	{
-		switch(_Sev)
-		{
-			case ESeverity_None:
-				return "None";
-			case ESeverity_Debug:
-				return "Debug";
-			case ESeverity_DebugVerbose1:
-				return "DebugV1";
-			case ESeverity_DebugVerbose2:
-				return "DebugV2";
-			case ESeverity_DebugVerbose3:
-				return "DebugV3";
-			case ESeverity_Info:
-				return "Info";
-			case ESeverity_Warning:
-				return "Warning";
-			case ESeverity_Error:
-				return "Error";
-			case ESeverity_Perf_Info:
-				return "PInfo";
-			case ESeverity_Perf_Warning:
-				return "PWarning";
-			case ESeverity_Perf_Error:
-				return "PError";
-			case ESeverity_Critical:
-				return "Critical";
-			default:
-				return "Unknown";
-		}
-	}
-
-	ESeverity fg_LookupSeverity(CLogStr const& _Name)
-	{
-		if (_Name.f_CmpNoCase("None") == 0)
-			return ESeverity_None;
-		else if (_Name.f_CmpNoCase("All") == 0)
-			return ESeverity_All;
-		else if (_Name.f_CmpNoCase("Debug") == 0)
-			return ESeverity_Debug;
-		else if (_Name.f_CmpNoCase("DebugV1") == 0)
-			return ESeverity_DebugVerbose1;
-		else if (_Name.f_CmpNoCase("DebugV2") == 0)
-			return ESeverity_DebugVerbose2;
-		else if (_Name.f_CmpNoCase("DebugV3") == 0)
-			return ESeverity_DebugVerbose3;
-		else if (_Name.f_CmpNoCase("Info") == 0)
-			return ESeverity_Info;
-		else if (_Name.f_CmpNoCase("Warning") == 0)
-			return ESeverity_Warning;
-		else if (_Name.f_CmpNoCase("Error") == 0)
-			return ESeverity_Error;
-		else if (_Name.f_CmpNoCase("Perf_Info") == 0)
-			return ESeverity_Perf_Info;
-		else if (_Name.f_CmpNoCase("Perf_Warning") == 0)
-			return ESeverity_Perf_Warning;
-		else if (_Name.f_CmpNoCase("Critical") == 0)
-			return ESeverity_Critical;
-		else
-			return ESeverity_None;
-	}
 
 	void fg_LogTo_DebugOut(
 			mint _ThreadID
