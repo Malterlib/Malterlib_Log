@@ -998,7 +998,7 @@ namespace NMib::NLog
 
 		pFile->f_Write(Text.f_GetStr(), Text.f_GetLen() * sizeof(CLogStr::CChar));
 		pFile->f_Flush(false); // Optional?
-#ifdef DPlatformFamily_OSX
+#ifdef DPlatformFamily_macOS
 		// Without this no file change notification will be triggered
 		pFile->f_SetLength(pFile->f_GetLength());
 #endif
