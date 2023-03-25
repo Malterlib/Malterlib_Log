@@ -596,14 +596,15 @@ namespace NMib::NLog
 
 	// CLogFilter
 
-	bool CLogFilter::f_Test(
+	bool CLogFilter::f_Test
+		(
 			mint _ThreadID
-		,	NTime::CTime const& _Time
-		,	ESeverity _Sev
-		, 	CLogStr const& _Message
-		,	NContainer::TCVector<NStr::CStr> const &_Categories
-		,	NContainer::TCVector<NStr::CStr> const &_Operations
-		,	CLogLocationTag const& _Loc
+			, NTime::CTime const& _Time
+			, ESeverity _Sev
+			, CLogStr const& _Message
+			, NContainer::TCVector<NStr::CStr> const &_Categories
+			, NContainer::TCVector<NStr::CStr> const &_Operations
+			, CLogLocationTag const& _Loc
 		)
 	{
 		if (m_Severity != ESeverity_None && (_Sev & m_Severity) == 0)
@@ -660,15 +661,16 @@ namespace NMib::NLog
 
 	// Global
 
-	void fg_LogTo_DebugOut(
+	void fg_LogTo_DebugOut
+		(
 			mint _ThreadID
-			,	NTime::CTime const& _Time
-			,	ESeverity _Sev
-			, 	CLogStr const& _Message
-			,	NContainer::TCVector<NStr::CStr> const &_Categories
-			,	NContainer::TCVector<NStr::CStr> const &_Operations
-			,	CLogLocationTag const& _Loc
-			)
+			, NTime::CTime const& _Time
+			, ESeverity _Sev
+			, CLogStr const& _Message
+			, NContainer::TCVector<NStr::CStr> const &_Categories
+			, NContainer::TCVector<NStr::CStr> const &_Operations
+			, CLogLocationTag const& _Loc
+		)
 	{
 		NTime::CTimeConvert::CDateTime DateTime;
 		NTime::CTimeConvert(_Time.f_ToLocal()).f_ExtractDateTime(DateTime);
