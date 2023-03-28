@@ -77,24 +77,24 @@ namespace NMib::NLog
 #if DMibSysLogSeverities
 	CSysLogOpScope::CSysLogOpScope(CSysLogOpScope &&_Other) = default;
 
-	void CSysLogOpScope::f_Suspend()
+	void CSysLogOpScope::f_Suspend() noexcept
 	{
 		m_SysLog.f_PopOperationScope(*this);
 	}
 
-	void CSysLogOpScope::f_Resume()
+	void CSysLogOpScope::f_ResumeNoExcept() noexcept
 	{
 		m_SysLog.f_PushOperationScope(*this);
 	}
 
 	CSysLogCatScope::CSysLogCatScope(CSysLogCatScope &&_Other) = default;
 
-	void CSysLogCatScope::f_Suspend()
+	void CSysLogCatScope::f_Suspend() noexcept
 	{
 		m_SysLog.f_PopCategoryScope(*this);
 	}
 
-	void CSysLogCatScope::f_Resume()
+	void CSysLogCatScope::f_ResumeNoExcept() noexcept
 	{
 		m_SysLog.f_PushCategoryScope(*this);
 	}

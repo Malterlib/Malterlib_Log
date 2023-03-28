@@ -98,12 +98,12 @@ namespace NMib::NLog
 			mp_Logger.f_PopDestination();
 		}
 
-		void f_Suspend() override
+		void f_Suspend() noexcept override
 		{
 			mp_Logger.f_PopDestination();
 		}
 
-		void f_Resume() override
+		void f_ResumeNoExcept() noexcept override
 		{
 			mp_Logger.f_PushDestination(CFileLogger(&mp_File), mp_Filter);
 		}

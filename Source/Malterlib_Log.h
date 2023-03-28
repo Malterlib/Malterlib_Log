@@ -217,8 +217,8 @@ namespace NMib::NLog
 		inline CSysLogCatScope(CSystemLogger &_SysLog, char const *_pCategory);
 		inline ~CSysLogCatScope();
 		CSysLogCatScope(CSysLogCatScope &&_Other);
-		void f_Suspend() override;
-		void f_Resume() override;
+		void f_Suspend() noexcept override;
+		void f_ResumeNoExcept() noexcept override;
 
 		CSystemLogger &m_SysLog;
 		ch8 const *m_pCategory;
@@ -230,8 +230,8 @@ namespace NMib::NLog
 		inline CSysLogOpScope(CSystemLogger &_SysLog, char const *_pOperation);
 		inline ~CSysLogOpScope();
 		CSysLogOpScope(CSysLogOpScope &&_Other);
-		void f_Suspend() override;
-		void f_Resume() override;
+		void f_Suspend() noexcept override;
+		void f_ResumeNoExcept() noexcept override;
 
 		CSystemLogger &m_SysLog;
 		ch8 const *m_pOperation;
