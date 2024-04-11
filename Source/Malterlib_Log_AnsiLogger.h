@@ -31,7 +31,6 @@ namespace NMib::NLog
 		NStr::CStr mp_TimeColor;
 		NStr::CStr mp_CategoryColor;
 		NStr::CStr mp_DebugColor;
-		NStr::CStr mp_Indent;
 		bool mp_bTrace = false;
 	};
 #endif

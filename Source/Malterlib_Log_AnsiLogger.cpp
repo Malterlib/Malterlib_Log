@@ -6,6 +6,9 @@
 namespace NMib::NLog
 {
 #if (DMibSysLogSeverities) != 0
+
+	static constexpr NStr::CStr gc_Indent = NStr::gc_Str<"                                                                     ">;
+
 	CLogToStdErrAnsi::CLogToStdErrAnsi(NCommandLine::EAnsiEncodingFlag _AnsiFlags, NLog::ESeverity _Severities, bool _bTrace)
 		: mp_AnsiEncoding(_AnsiFlags)
 		, mp_Severities(_Severities)
@@ -14,7 +17,6 @@ namespace NMib::NLog
 		mp_TimeColor = mp_AnsiEncoding.f_ForegroundRGB(128, 128, 128);
 		mp_DebugColor = mp_AnsiEncoding.f_ForegroundRGB(100, 100, 100);
 		mp_CategoryColor = mp_AnsiEncoding.f_ForegroundRGB(51, 182, 255);
-		mp_Indent = "                                                                     ";
 	}
 
 	void CLogToStdErrAnsi::operator()
@@ -118,7 +120,7 @@ namespace NMib::NLog
 			<< SeverityString
 			<< SeverityOffset
 			<< mp_AnsiEncoding.f_Default()
-			<< _Message.f_Indent(mp_Indent, false)
+			<< _Message.f_Indent(gc_Indent, false)
 		;
 
 		if (mp_bTrace)

@@ -661,6 +661,8 @@ namespace NMib::NLog
 
 	// Global
 
+	static constexpr NStr::CStr gc_Indent = NStr::gc_Str<"                                                                    ">;
+
 	void fg_LogTo_DebugOut
 		(
 			mint _ThreadID
@@ -687,7 +689,7 @@ namespace NMib::NLog
 				<< DateTime.m_Fraction
 				<< (_Categories.f_IsEmpty() ? NStr::CStrNonTracked() : NStr::fg_Format<NStr::CStrNonTracked>("<{}>", _Categories.f_GetFirst()))
 				<< NStr::fg_Format<NStr::CStrNonTracked>("[{}]", fg_GetSeverityName(_Sev))
-				<< _Message
+				<< _Message.f_Indent(gc_Indent, false)
 			)
 		;
 	}
@@ -718,7 +720,7 @@ namespace NMib::NLog
 				<< DateTime.m_Fraction
 				<< (_Categories.f_IsEmpty() ? NStr::CStrNonTracked() : NStr::fg_Format<NStr::CStrNonTracked>("<{}>", _Categories.f_GetFirst()))
 				<< NStr::fg_Format<NStr::CStrNonTracked>("[{}]", fg_GetSeverityName(_Sev))
-				<< _Message
+				<< _Message.f_Indent(gc_Indent, false)
 			)
 		;
 	}
@@ -994,7 +996,7 @@ namespace NMib::NLog
 				, DateTime.m_Fraction
 				, (_Categories.f_IsEmpty() ? NStr::CStrNonTracked() : NStr::fg_Format<NStr::CStrNonTracked>("<{}>", _Categories.f_GetFirst()))
 				, NStr::fg_Format<NStr::CStrNonTracked>("[{}]", fg_GetSeverityName(_Sev))
-				, _Message
+				, _Message.f_Indent(gc_Indent, false)
 			)
 		;
 
