@@ -31,6 +31,9 @@ namespace NMib::NLog
 		NStr::CStr mp_TimeColor;
 		NStr::CStr mp_CategoryColor;
 		NStr::CStr mp_DebugColor;
+		NStr::CStr mp_StdErrColor;
+		NStr::CStr mp_StdOutColor;
+		NStr::CStr mp_CriticalColor;
 		bool mp_bTrace = false;
 	};
 #endif

@@ -17,6 +17,9 @@ namespace NMib::NLog
 		mp_TimeColor = mp_AnsiEncoding.f_ForegroundRGB(128, 128, 128);
 		mp_DebugColor = mp_AnsiEncoding.f_ForegroundRGB(100, 100, 100);
 		mp_CategoryColor = mp_AnsiEncoding.f_ForegroundRGB(51, 182, 255);
+		mp_StdErrColor = mp_AnsiEncoding.f_ForegroundRGB(0xffb680);
+		mp_StdOutColor = mp_AnsiEncoding.f_ForegroundRGB(0xdbd3ff);
+		mp_CriticalColor = mp_AnsiEncoding.f_Bold() + mp_AnsiEncoding.f_ForegroundRGB(0xff3f1c);
 	}
 
 	void CLogToStdErrAnsi::operator()
@@ -36,15 +39,22 @@ namespace NMib::NLog
 		NTime::CTimeConvert::CDateTime DateTime;
 		NTime::CTimeConvert(_Time.f_ToLocal()).f_ExtractDateTime(DateTime);
 
-		if (!_Operations.f_IsEmpty() && _Operations.f_GetFirst() == "DisableStdErrLogger")
+		if (!_Operations.f_IsEmpty() && _Operations.f_GetFirst() == NStr::gc_Str<"DisableStdErrLogger">.m_Str)
 			return;
+
+		bool bStdOut = false;
+		bool bStdErr = false;
 
 		auto SeverityString = [&]() -> NStr::CStr
 			{
 				if (mp_AnsiEncoding.f_Color())
 				{
-					if (!_Operations.f_IsEmpty() && _Operations.f_GetFirst() != "DisableDistributedLogReporter")
+					if (!_Operations.f_IsEmpty() && _Operations.f_GetFirst() != NStr::gc_Str<"DisableDistributedLogReporter">.m_Str)
+					{
+						bStdOut = _Operations.f_GetFirst() == NStr::gc_Str<"StdOut">.m_Str;
+						bStdErr = _Operations.f_GetFirst() == NStr::gc_Str<"StdErr">.m_Str;
 						return _Operations.f_GetFirst();
+					}
 					else
 						return NLog::fg_GetSeverityName(_Sev);
 				}
@@ -96,7 +106,10 @@ namespace NMib::NLog
 				{
 				case NLog::ESeverity_None:
 				case NLog::ESeverity_Info:
-					return mp_AnsiEncoding.f_StatusNormal();
+					if (bStdOut)
+						return mp_StdOutColor;
+					else
+						return mp_AnsiEncoding.f_StatusNormal();
 				case NLog::ESeverity_Debug:
 				case NLog::ESeverity_DebugVerbose1:
 				case NLog::ESeverity_DebugVerbose2:
@@ -106,10 +119,14 @@ namespace NMib::NLog
 				case NLog::ESeverity_Warning:
 				case NLog::ESeverity_Perf_Warning:
 					return mp_AnsiEncoding.f_StatusWarning();
-				case NLog::ESeverity_Critical:
 				case NLog::ESeverity_Error:
 				case NLog::ESeverity_Perf_Error:
-					return mp_AnsiEncoding.f_StatusError();
+					if (bStdErr)
+						return mp_StdErrColor;
+					else
+						return mp_AnsiEncoding.f_StatusError();
+				case NLog::ESeverity_Critical:
+						return mp_CriticalColor;
 				case NLog::ESeverity_All:
 					DMibNeverGetHere;
 				}
