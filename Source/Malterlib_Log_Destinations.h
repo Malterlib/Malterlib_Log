@@ -8,29 +8,8 @@ namespace NMib::NLog
 {
 #if DMibSysLogSeverities
 
-	void fg_LogTo_DebugOut
-		(
-			mint _ThreadID
-			, NTime::CTime const& _Time
-			, ESeverity _Sev
-			, CLogStr const& _Message
-			, NContainer::TCVector<NStr::CStr> const &_Categories
-			, NContainer::TCVector<NStr::CStr> const &_Operations
-			, CLogLocationTag const& _Loc
-		)
-	;
-
-	void fg_LogTo_StdErr
-		(
-			mint _ThreadID
-			, NTime::CTime const& _Time
-			, ESeverity _Sev
-			, CLogStr const& _Message
-			, NContainer::TCVector<NStr::CStr> const &_Categories
-			, NContainer::TCVector<NStr::CStr> const &_Operations
-			, CLogLocationTag const& _Loc
-		)
-	;
+	FLogDestination fg_LogTo_DebugOut();
+	FLogDestination fg_LogTo_StdErr();
 
 	struct CLogFile
 	{

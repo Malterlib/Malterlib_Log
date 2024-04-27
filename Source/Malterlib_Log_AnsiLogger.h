@@ -24,6 +24,18 @@ namespace NMib::NLog
 			)
 		;
 
+		NStr::CStrNonTracked f_FormatLog
+			(
+				mint _ThreadID
+				, NTime::CTime const &_Time
+				, NLog::ESeverity _Sev
+				, NLog::CLogStr const &_Message
+				, NContainer::TCVector<NStr::CStr> const &_Categories
+				, NContainer::TCVector<NStr::CStr> const &_Operations
+				, NLog::CLogLocationTag const& _Loc
+			)
+		;
+
 	private:
 		NCommandLine::CAnsiEncoding mp_AnsiEncoding;
 		NLog::ESeverity mp_Severities = NLog::ESeverity_All;

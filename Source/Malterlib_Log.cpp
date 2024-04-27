@@ -3,9 +3,11 @@
 
 #include <Mib/Core/Core>
 #include <Mib/Function/Function>
+#include <Mib/CommandLine/CommandLine>
 #include "Malterlib_Log_Configuration.h"
 #include "Malterlib_Log_Destinations.h"
 #include "Malterlib_Log.h"
+#include "Malterlib_Log_AnsiLogger.h"
 
 namespace NMib::NLog
 {
@@ -397,7 +399,7 @@ namespace NMib::NLog
 		if (_Name.f_CmpNoCase("DebugOut") == 0)
 		{
 			fl_ParseFilter(_lArgs, 0, Filter);
-			f_PushGlobalDestination(&fg_LogTo_DebugOut, fg_Move(Filter));
+			f_PushGlobalDestination(fg_LogTo_DebugOut(), fg_Move(Filter));
 		}
 		else if (_Name.f_CmpNoCase("File") == 0)
 		{
@@ -661,67 +663,112 @@ namespace NMib::NLog
 
 	// Global
 
-	static constexpr NStr::CStr gc_Indent = NStr::gc_Str<"                                                                    ">;
-
-	void fg_LogTo_DebugOut
-		(
-			mint _ThreadID
-			, NTime::CTime const& _Time
-			, ESeverity _Sev
-			, CLogStr const& _Message
-			, NContainer::TCVector<NStr::CStr> const &_Categories
-			, NContainer::TCVector<NStr::CStr> const &_Operations
-			, CLogLocationTag const& _Loc
-		)
+	struct CAnsiLoggerConfig
 	{
-		NTime::CTimeConvert::CDateTime DateTime;
-		NTime::CTimeConvert(_Time.f_ToLocal()).f_ExtractDateTime(DateTime);
+		static ESeverity fs_GetSeveritiesFilter(NStr::CStr const &_SettingsName)
+		{
+			using namespace NStr;
 
-		DMibTrace
+			ESeverity LogSeverities = ESeverity_All;
+			auto CustomSeverities = fg_GetSys()->f_GetEnvironmentVariable("{}Severities"_f << _SettingsName, "");
+			if (CustomSeverities)
+			{
+				LogSeverities = ESeverity_None;
+				for (auto &SeverityName : CustomSeverities.f_Split(","))
+					LogSeverities |= fg_LookupSeverity(SeverityName.f_Trim());
+			}
+
+			return LogSeverities;
+		}
+
+		static NCommandLine::EAnsiEncodingFlag fs_GetAnsiFlags(NStr::CStr const &_SettingsName, NCommandLine::EAnsiEncodingFlag _DefaultColor)
+		{
+			using namespace NStr;
+
+			NCommandLine::EAnsiEncodingFlag Flags = _DefaultColor;
+			auto LogSettings = fg_GetSys()->f_GetEnvironmentVariable("{}Color"_f << _SettingsName, {});
+			if (LogSettings == "true")
+				Flags = NCommandLine::EAnsiEncodingFlag_Color | NCommandLine::EAnsiEncodingFlag_Color24Bit | NCommandLine::EAnsiEncodingFlag_BoxDrawing;
+			else if (LogSettings != "false")
+			{
+				for (auto &Setting : LogSettings.f_Split(","))
+				{
+					if (Setting == "Color")
+						Flags |= NCommandLine::EAnsiEncodingFlag_Color;
+					else if (Setting == "Color24Bit")
+						Flags |= NCommandLine::EAnsiEncodingFlag_Color24Bit;
+					else if (Setting == "ColorLightBackground")
+						Flags |= NCommandLine::EAnsiEncodingFlag_ColorLightBackground;
+					else if (Setting == "BoxDrawing")
+						Flags |= NCommandLine::EAnsiEncodingFlag_BoxDrawing;
+				}
+			}
+
+			return Flags;
+		}
+
+		CAnsiLoggerConfig(NStr::CStr const &_SettingsName, NCommandLine::EAnsiEncodingFlag _DefaultColor, bool _bTrace)
+			: m_AnsiLogger(fs_GetAnsiFlags(_SettingsName, _DefaultColor), fs_GetSeveritiesFilter(_SettingsName), _bTrace)
+		{
+		}
+
+		CLogToStdErrAnsi m_AnsiLogger;
+	};
+
+	struct CAnsiLoggerConfig_StdErr : public CAnsiLoggerConfig
+	{
+		CAnsiLoggerConfig_StdErr()
+			: CAnsiLoggerConfig(NStr::gc_Str<"MalterlibStdErrLog">, NCommandLine::CCommandLineDefaults::fs_ColorAnsiFlagsDefault(), false)
+		{
+		}
+	};
+
+	constinit static NStorage::TCAggregate<CAnsiLoggerConfig_StdErr> g_AnsiLogger_StdErr = {DAggregateInit};
+
+
+	struct CAnsiLoggerConfig_Trace : public CAnsiLoggerConfig
+	{
+		CAnsiLoggerConfig_Trace()
+			: CAnsiLoggerConfig(NStr::gc_Str<"MalterlibTraceLog">, NCommandLine::CCommandLineDefaults::fs_ColorAnsiFlagsDefault(), true)
+		{
+		}
+	};
+
+	constinit static NStorage::TCAggregate<CAnsiLoggerConfig_Trace> g_AnsiLogger_Trace = {DAggregateInit};
+
+	FLogDestination fg_LogTo_DebugOut()
+	{
+		return [pTraceLogger = &*g_AnsiLogger_Trace]
 			(
-				"{}-{sj2,sf0}-{sj2,sf0} {sj2,sf0}:{sj2,sf0}:{sj2,sf0}.{fr1,fe3} {sj32} {sj10} {}{\n}"
-				, DateTime.m_Year
-				<< DateTime.m_Month
-				<< DateTime.m_DayOfMonth
-				<< DateTime.m_Hour
-				<< DateTime.m_Minute
-				<< DateTime.m_Second
-				<< DateTime.m_Fraction
-				<< (_Categories.f_IsEmpty() ? NStr::CStrNonTracked() : NStr::fg_Format<NStr::CStrNonTracked>("<{}>", _Categories.f_GetFirst()))
-				<< NStr::fg_Format<NStr::CStrNonTracked>("[{}]", fg_GetSeverityName(_Sev))
-				<< _Message.f_Indent(gc_Indent, false)
+				mint _ThreadID
+				, NTime::CTime const &_Time
+				, ESeverity _Sev
+				, CLogStr const &_Message
+				, NContainer::TCVector<NStr::CStr> const &_Categories
+				, NContainer::TCVector<NStr::CStr> const &_Operations
+				, CLogLocationTag const &_Loc
 			)
+			{
+				pTraceLogger->m_AnsiLogger(_ThreadID, _Time, _Sev, _Message, _Categories, _Operations, _Loc);
+			}
 		;
 	}
 
-	void fg_LogTo_StdErr
-		(
-			mint _ThreadID
-			, NTime::CTime const& _Time
-			, ESeverity _Sev
-			, CLogStr const& _Message
-			, NContainer::TCVector<NStr::CStr> const &_Categories
-			, NContainer::TCVector<NStr::CStr> const &_Operations
-			, CLogLocationTag const& _Loc
-		)
+	FLogDestination fg_LogTo_StdErr()
 	{
-		NTime::CTimeConvert::CDateTime DateTime;
-		NTime::CTimeConvert(_Time.f_ToLocal()).f_ExtractDateTime(DateTime);
-
-		DMibConErrOut
+		return [pStdErrLogger = &*g_AnsiLogger_StdErr]
 			(
-				"{}-{sj2,sf0}-{sj2,sf0} {sj2,sf0}:{sj2,sf0}:{sj2,sf0}.{fr1,fe3} {sj32} {sj10} {}{\n}"
-				, DateTime.m_Year
-				<< DateTime.m_Month
-				<< DateTime.m_DayOfMonth
-				<< DateTime.m_Hour
-				<< DateTime.m_Minute
-				<< DateTime.m_Second
-				<< DateTime.m_Fraction
-				<< (_Categories.f_IsEmpty() ? NStr::CStrNonTracked() : NStr::fg_Format<NStr::CStrNonTracked>("<{}>", _Categories.f_GetFirst()))
-				<< NStr::fg_Format<NStr::CStrNonTracked>("[{}]", fg_GetSeverityName(_Sev))
-				<< _Message.f_Indent(gc_Indent, false)
+				mint _ThreadID
+				, NTime::CTime const &_Time
+				, ESeverity _Sev
+				, CLogStr const &_Message
+				, NContainer::TCVector<NStr::CStr> const &_Categories
+				, NContainer::TCVector<NStr::CStr> const &_Operations
+				, CLogLocationTag const &_Loc
 			)
+			{
+				pStdErrLogger->m_AnsiLogger(_ThreadID, _Time, _Sev, _Message, _Categories, _Operations, _Loc);
+			}
 		;
 	}
 
@@ -953,17 +1000,29 @@ namespace NMib::NLog
 	{
 	}
 
+	struct CAnsiLoggerConfig_File : public CAnsiLoggerConfig
+	{
+		CAnsiLoggerConfig_File()
+			: CAnsiLoggerConfig(NStr::gc_Str<"MalterlibFileLog">, NCommandLine::EAnsiEncodingFlag_None, false)
+		{
+		}
+	};
+
+	constinit static NStorage::TCAggregate<CAnsiLoggerConfig_File> g_AnsiLogger_File = {DAggregateInit};
+
 	void CFileLogger::operator()
 		(
 			mint _ThreadID
-			, NTime::CTime const& _Time
+			, NTime::CTime const &_Time
 			, ESeverity _Sev
-			, CLogStr const& _Message
+			, CLogStr const &_Message
 			, NContainer::TCVector<NStr::CStr> const &_Categories
 			, NContainer::TCVector<NStr::CStr> const &_Operations
-			, CLogLocationTag const& _Loc
+			, CLogLocationTag const &_Loc
 		)
 	{
+		auto &AnsiLogger = *g_AnsiLogger_File;
+
 		CLogFile* pLogFile = mp_pLogFile;
 
 		DMibLock(pLogFile->m_Lock);
@@ -976,29 +1035,7 @@ namespace NMib::NLog
 		NTime::CTimeConvert::CDateTime DateTime;
 		NTime::CTimeConvert(_Time.f_ToLocal()).f_ExtractDateTime(DateTime);
 
-		CLogStr Text = NStr::fg_Format<CLogStr>
-			(
-#if 0
-				DMibPFileLineFormat " #{nh,sj8,sf0} : "
-#endif
-				"{}-{sj2,sf0}-{sj2,sf0} {sj2,sf0}:{sj2,sf0}:{sj2,sf0}.{fr1,fe3} {sj32} {sj10} {}{\n}"
-#if 0
-				, fg_ExtractFileName(_Loc.m_pFile)
-				, _Loc.m_Line
-				, _ThreadID
-#endif
-				, DateTime.m_Year
-				, DateTime.m_Month
-				, DateTime.m_DayOfMonth
-				, DateTime.m_Hour
-				, DateTime.m_Minute
-				, DateTime.m_Second
-				, DateTime.m_Fraction
-				, (_Categories.f_IsEmpty() ? NStr::CStrNonTracked() : NStr::fg_Format<NStr::CStrNonTracked>("<{}>", _Categories.f_GetFirst()))
-				, NStr::fg_Format<NStr::CStrNonTracked>("[{}]", fg_GetSeverityName(_Sev))
-				, _Message.f_Indent(gc_Indent, false)
-			)
-		;
+		CLogStr Text = AnsiLogger.m_AnsiLogger.f_FormatLog(_ThreadID, _Time, _Sev, _Message, _Categories, _Operations, _Loc);
 
 		pFile->f_Write(Text.f_GetStr(), Text.f_GetLen() * sizeof(CLogStr::CChar));
 		pFile->f_Flush(false); // Optional?

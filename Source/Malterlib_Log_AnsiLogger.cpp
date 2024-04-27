@@ -22,7 +22,7 @@ namespace NMib::NLog
 		mp_CriticalColor = mp_AnsiEncoding.f_Bold() + mp_AnsiEncoding.f_ForegroundRGB(0xff3f1c);
 	}
 
-	void CLogToStdErrAnsi::operator()
+	NStr::CStrNonTracked CLogToStdErrAnsi::f_FormatLog
 		(
 			mint _ThreadID
 			, NTime::CTime const &_Time
@@ -30,17 +30,17 @@ namespace NMib::NLog
 			, NLog::CLogStr const &_Message
 			, NContainer::TCVector<NStr::CStr> const &_Categories
 			, NContainer::TCVector<NStr::CStr> const &_Operations
-			, NLog::CLogLocationTag const& _Loc
+			, NLog::CLogLocationTag const &_Loc
 		)
 	{
 		if ((_Sev & mp_Severities) == NLog::ESeverity_None)
-			return;
+			return {};
 
 		NTime::CTimeConvert::CDateTime DateTime;
 		NTime::CTimeConvert(_Time.f_ToLocal()).f_ExtractDateTime(DateTime);
 
 		if (!_Operations.f_IsEmpty() && _Operations.f_GetFirst() == NStr::gc_Str<"DisableStdErrLogger">.m_Str)
-			return;
+			return {};
 
 		bool bStdOut = false;
 		bool bStdErr = false;
@@ -84,7 +84,7 @@ namespace NMib::NLog
 			()
 		;
 
-		NStr::CStrNonTracked OutputString = NStr::CStrNonTracked::CFormat
+		return NStr::CStrNonTracked::CFormat
 			(
 				"{}{}-{sj2,sf0}-{sj2,sf0} {sj2,sf0}:{sj2,sf0}:{sj2,sf0}.{fr1,fe3}{}  {}{sj32}{} {}{sj10,a-*}{} {}{\n}"
 			)
@@ -139,11 +139,27 @@ namespace NMib::NLog
 			<< mp_AnsiEncoding.f_Default()
 			<< _Message.f_Indent(gc_Indent, false)
 		;
+	}
+
+	void CLogToStdErrAnsi::operator()
+		(
+			mint _ThreadID
+			, NTime::CTime const &_Time
+			, NLog::ESeverity _Sev
+			, NLog::CLogStr const &_Message
+			, NContainer::TCVector<NStr::CStr> const &_Categories
+			, NContainer::TCVector<NStr::CStr> const &_Operations
+			, NLog::CLogLocationTag const &_Loc
+		)
+	{
+		auto LogString = f_FormatLog(_ThreadID, _Time, _Sev, _Message, _Categories, _Operations, _Loc);
+		if (!LogString)
+			return;
 
 		if (mp_bTrace)
-			DMibTraceRaw(OutputString.f_GetStr());
+			DMibTraceRaw(LogString.f_GetStr());
 		else
-			DMibConErrOutRaw(OutputString.f_GetStr());
+			DMibConErrOutRaw(LogString.f_GetStr());
 	}
 #endif
 }
