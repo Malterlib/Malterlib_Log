@@ -60,7 +60,7 @@ namespace NMib::NLog
 				}
 				else
 				{
-					if (!_Operations.f_IsEmpty())
+					if (!_Operations.f_IsEmpty() && _Operations.f_GetFirst() != NStr::gc_Str<"DisableDistributedLogReporter">.m_Str)
 						return NStr::fg_Format("[{}]", _Operations.f_GetFirst());
 					else
 						return NStr::fg_Format("[{}]", NLog::fg_GetSeverityName(_Sev));
