@@ -701,6 +701,8 @@ namespace NMib::NLog
 						Flags |= NCommandLine::EAnsiEncodingFlag_ColorLightBackground;
 					else if (Setting == "BoxDrawing")
 						Flags |= NCommandLine::EAnsiEncodingFlag_BoxDrawing;
+					else if (Setting == "ColorSgrUsesSemiColon")
+						Flags |= NCommandLine::EAnsiEncodingFlag_ColorSgrUsesSemiColon;
 				}
 			}
 
