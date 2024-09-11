@@ -504,7 +504,7 @@ namespace NMib::NLog
 	#define DMibLogOpEx(_Tag, _Op) DMibLogOperationEx(_Tag, _Op)
 
 	#define DMibLogWithCategory(d_Category, d_Severity, ...) [&]{DMibLogCategory(d_Category); DMibLog(d_Severity, __VA_ARGS__);}()
-	#define DMibLogWithCategoryStr(d_Category, d_Severity, ...) [&](CStr const &_Category){DMibLogCategoryStr(_Category.f_GetStr()); DMibLog(d_Severity, __VA_ARGS__);}(d_Category)
+	#define DMibLogWithCategoryStr(d_Category, d_Severity, ...) [&](::NMib::NStr::CStr const &_Category){DMibLogCategoryStr(_Category.f_GetStr()); DMibLog(d_Severity, __VA_ARGS__);}(d_Category)
 
 	#ifndef DMibPNoShortCuts
 		#define DLog(_Sev, ...) DMibLog(_Sev, __VA_ARGS__)
