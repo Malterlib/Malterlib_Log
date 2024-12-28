@@ -10,8 +10,16 @@ namespace NMib::NLog
 #if DMibSysLogSeverities
 	struct CLogToStdErrAnsi
 	{
-		CLogToStdErrAnsi(NCommandLine::EAnsiEncodingFlag _AnsiFlags, NLog::ESeverity _Severities, bool _bTrace);
-		
+		CLogToStdErrAnsi
+			(
+				NCommandLine::EAnsiEncodingFlag _AnsiFlags
+				, NLog::ESeverity _Severities
+				, bool _bTrace
+				, mint _CategoryWidth = fg_GetSys()->f_GetEnvironmentVariable("MalterlibLogCategoryWidth", "32").f_ToInt(mint(32))
+				, mint _SeverityWidth = fg_GetSys()->f_GetEnvironmentVariable("MalterlibLogSeverityWidth", "10").f_ToInt(mint(10))
+			)
+		;
+
 		void operator()
 			(
 				mint _ThreadID
@@ -45,7 +53,13 @@ namespace NMib::NLog
 		NStr::CStr mp_DebugColor;
 		NStr::CStr mp_StdErrColor;
 		NStr::CStr mp_StdOutColor;
+		NStr::CStr mp_LogColor;
 		NStr::CStr mp_CriticalColor;
+		NStr::CStr mp_Indent;
+
+		mint mp_CategoryWidth = 32;
+		mint mp_SeverityWidth = 10;
+
 		bool mp_bTrace = false;
 	};
 #endif
