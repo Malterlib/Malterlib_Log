@@ -781,7 +781,10 @@ namespace NMib::NLog
 	CLogFile::~CLogFile()
 	{
 		if (m_File.f_IsValid())
+		{
+			m_File.f_Flush(false);
 			m_File.f_Close();
+		}
 	}
 
 	void CLogFile::f_PrepareFork()
@@ -1038,7 +1041,6 @@ namespace NMib::NLog
 		CLogStr Text = AnsiLogger.m_AnsiLogger.f_FormatLog(_ThreadID, _Time, _Sev, _Message, _Categories, _Operations, _Loc);
 
 		pFile->f_Write(Text.f_GetStr(), Text.f_GetLen() * sizeof(CLogStr::CChar));
-		pFile->f_Flush(false); // Optional?
 #ifdef DPlatformFamily_macOS
 		// Without this no file change notification will be triggered
 		pFile->f_SetLength(pFile->f_GetLength());
