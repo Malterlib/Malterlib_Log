@@ -177,7 +177,7 @@ namespace NMib::NLog
 		, ESeverity_All				= DMibBit(11) - 1	 // Only to be used in filters
 	};
 
-	typedef NStr::CStrNonTracked CLogStr;
+	using CLogStr = NStr::CStrNonTracked;
 
 	struct CLogLocationTag
 	{
@@ -207,9 +207,9 @@ namespace NMib::NLog
 	class CNullLogger;
 
 	#if (DMibSysLogSeverities) != 0
-		typedef CLogger CSystemLogger;
+		using CSystemLogger = CLogger;
 	#else
-		typedef CNullLogger CSystemLogger;
+		using CSystemLogger = CNullLogger;
 	#endif
 
 	struct CSysLogCatScope : public CCoroutineThreadLocalHandler
