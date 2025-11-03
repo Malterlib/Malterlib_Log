@@ -853,7 +853,26 @@ namespace NMib::NLog
 		{
 			try
 			{
-				NTime::CTime OldestAllowed = NTime::CTime::fs_NowUTC() - NTime::CTimeSpanConvert::fs_CreateWeekSpan(1);
+				auto LastRotateCheckFile = _Directory / "LastRotate.file";
+				auto Now = NTime::CTime::fs_NowUTC();
+
+				try
+				{
+					if (CFile::fs_FileExists(LastRotateCheckFile))
+					{
+						auto LastCheck = CFile::fs_GetWriteTime(LastRotateCheckFile);
+						if ((Now - LastCheck).f_GetSecondsFraction() < 1_days)
+							return;
+						CFile::fs_SetWriteTime(LastRotateCheckFile, Now);
+					}
+					else
+						CFile::fs_Touch(LastRotateCheckFile);
+				}
+				catch (CExceptionFile)
+				{
+				}
+
+				NTime::CTime OldestAllowed = Now - NTime::CTimeSpanConvert::fs_CreateWeekSpan(1);
 				CFile::CFindFilesOptions FindOptions{NStr::fg_Format<CLogStr>("{}{}*.{}", _Directory, _Name, _Extension), false};
 				CLogStr ParseRotatedFile = NStr::fg_Format<CLogStr>("{}_{{}_{{}", _Name);
 				CLogStr HistoryDirectory = CFile::fs_AppendPath(_Directory, "Older/");
