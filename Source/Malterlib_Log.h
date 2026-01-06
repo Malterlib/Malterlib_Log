@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 /*
@@ -17,12 +17,12 @@ Hopefully not TL;DR:
 		aoqtexperimental_main.cpp(79) : #0000189c : [2012-10-09 12:59:51] : (    Info) :          : AOQTExperimental
 		aoqtexperimental_main.cpp(83) : #0000189c : [2012-10-09 12:59:51] : ( Warning) :   "Flux" : Warning!
 		aoqtexperimental_main.cpp(90) : #0000189c : [2012-10-09 12:59:51] : (   Error) :          : Error!
-		
+
 		Note that categories are actually a stack. A log message will be tagged to all categories it is tagged with,
 		but the default log files only show the latest.
 
 		Operation (see below) is also a stack but it not shown by default. It is more useful for filtering.
-		
+
 	Log with DLog:
 
 		DLog(<Severity>, "<Message>", Args...)
@@ -62,24 +62,24 @@ Hopefully not TL;DR:
 		Config			Logged Severities
 		------			-----------------
 		Release			Nothing
-		
+
 		Debug			Debug, Info, Warning, Error, Critical
 
 		Profile			Error, Critical, Perf_Info, Perf_Warning, Perf_Error
 
 		The Rest		Warning, Error, Critical
-		
+
 
 		(See Malterlib_Log_Configuration.h for setting these)
 
 		When a config disabled a severity any macros of the form
-			DLog(<Severity>, ...) 
+			DLog(<Severity>, ...)
 		become NOPs (nothing).
 
-		When all severities are disabled all logging macros become nops. 
+		When all severities are disabled all logging macros become nops.
 
 	Log Destinations:
-		
+
 		By default log messages just go to Debug Out.
 
 		You can specify a config file in the dir with your exe named:
@@ -89,7 +89,7 @@ Hopefully not TL;DR:
 		(Note: The config file will be converted into a registry file in the future)
 
 		Log config format:
-		
+
 			<Dest>: <Arg>, <Arg>, ...
 
 		Supported destinations:
