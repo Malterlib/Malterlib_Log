@@ -242,7 +242,7 @@ namespace NMib::NLog
 		<
 			void
 			(
-				mint _ThreadID
+				umint _ThreadID
 				, NTime::CTime const& _Time
 				, ESeverity _Sev
 				, CLogStr const& _Message
@@ -284,7 +284,7 @@ namespace NMib::NLog
 
 		bool f_Test
 			(
-				mint _ThreadID
+				umint _ThreadID
 				, NTime::CTime const &_Time
 				, ESeverity _Sev
 				, CLogStr const &_Message
@@ -324,10 +324,10 @@ namespace NMib::NLog
 
 		bool f_ReadConfig(CLogStr const& _Path);
 
-		mint f_PushGlobalDestination(FLogDestination &&_fLog, bool _bUseDispatcher = true);
-		mint f_PushGlobalDestination(FLogDestination &&_fLog, CLogFilter&& _Filter);
+		umint f_PushGlobalDestination(FLogDestination &&_fLog, bool _bUseDispatcher = true);
+		umint f_PushGlobalDestination(FLogDestination &&_fLog, CLogFilter&& _Filter);
 		bool f_PopGlobalDestination();
-		void f_RemoveGlobalDestination(mint _ID);
+		void f_RemoveGlobalDestination(umint _ID);
 
 		void f_PushDestination(FLogDestination &&_fLog);
 		void f_PushDestination(FLogDestination &&_fLog, CLogFilter const &_Filter);
@@ -370,10 +370,10 @@ namespace NMib::NLog
 
 		bool f_ReadConfig(CLogStr const& _Path);
 
-		mint f_PushGlobalDestination(FLogDestination &&_fLog);
-		mint f_PushGlobalDestination(FLogDestination &&_fLog, CLogFilter&& _Filter);
+		umint f_PushGlobalDestination(FLogDestination &&_fLog);
+		umint f_PushGlobalDestination(FLogDestination &&_fLog, CLogFilter&& _Filter);
 		bool f_PopGlobalDestination();
-		void f_RemoveGlobalDestination(mint _ID);
+		void f_RemoveGlobalDestination(umint _ID);
 
 		void f_PushDestination(FLogDestination &&_fLog);
 		void f_PushDestination(FLogDestination &&_fLog, CLogFilter const &_Filter);

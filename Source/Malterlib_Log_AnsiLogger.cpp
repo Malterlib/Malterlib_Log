@@ -11,7 +11,7 @@ namespace NMib::NLog
 
 	static constexpr NStr::CStr gc_Indent = NStr::gc_Str<"                                                                     ">;
 
-	CLogToStdErrAnsi::CLogToStdErrAnsi(NCommandLine::EAnsiEncodingFlag _AnsiFlags, NLog::ESeverity _Severities, bool _bTrace, mint _CategoryWidth, mint _SeverityWidth)
+	CLogToStdErrAnsi::CLogToStdErrAnsi(NCommandLine::EAnsiEncodingFlag _AnsiFlags, NLog::ESeverity _Severities, bool _bTrace, umint _CategoryWidth, umint _SeverityWidth)
 		: mp_AnsiEncoding(_AnsiFlags)
 		, mp_Severities(_Severities)
 		, mp_bTrace(_bTrace)
@@ -34,22 +34,22 @@ namespace NMib::NLog
 			mp_Indent = "{sf ,sj*}"_f << "" << (gc_Indent.f_GetLen() + (aint(mp_SeverityWidth) - 10) + (aint(mp_CategoryWidth) - 32));
 	}
 
-	[[maybe_unused]] static NStr::CUStr fg_ShortenStringMiddle(NStr::CUStr const &_String, mint _MaxLen)
+	[[maybe_unused]] static NStr::CUStr fg_ShortenStringMiddle(NStr::CUStr const &_String, umint _MaxLen)
 	{
 		using namespace NStr;
 
 		if (_String.f_GetLen() <= aint(_MaxLen))
 			return _String;
 
-		mint LeftLen = _MaxLen / 2;
-		mint RightLen = (_MaxLen - LeftLen - 1);
+		umint LeftLen = _MaxLen / 2;
+		umint RightLen = (_MaxLen - LeftLen - 1);
 
 		return CUStr::CFormat(str_utf32("{}…{}")) << _String.f_Left(LeftLen) << _String.f_Right(RightLen);
 	}
 
 	NStr::CStrNonTracked CLogToStdErrAnsi::f_FormatLog
 		(
-			mint _ThreadID
+			umint _ThreadID
 			, NTime::CTime const &_Time
 			, NLog::ESeverity _Sev
 			, NLog::CLogStr const &_Message
@@ -98,7 +98,7 @@ namespace NMib::NLog
 
 		SeverityString = fg_ShortenStringMiddle(SeverityString, mp_SeverityWidth);
 
-		mint SeverityOffset = fg_Max((mp_SeverityWidth - SeverityString.f_GetLen()) / 2, 0u);
+		umint SeverityOffset = fg_Max((mp_SeverityWidth - SeverityString.f_GetLen()) / 2, 0u);
 
 		auto CategoryString = [&]() -> NStr::CUStr
 			{
@@ -179,7 +179,7 @@ namespace NMib::NLog
 
 	void CLogToStdErrAnsi::operator()
 		(
-			mint _ThreadID
+			umint _ThreadID
 			, NTime::CTime const &_Time
 			, NLog::ESeverity _Sev
 			, NLog::CLogStr const &_Message

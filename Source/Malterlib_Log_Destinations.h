@@ -34,7 +34,7 @@ namespace NMib::NLog
 
 		void operator()
 			(
-				mint _ThreadID
+				umint _ThreadID
 				, NTime::CTime const& _Time
 				, ESeverity _Sev
 				, CLogStr const& _Message

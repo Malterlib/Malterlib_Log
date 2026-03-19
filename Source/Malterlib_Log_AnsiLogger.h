@@ -15,14 +15,14 @@ namespace NMib::NLog
 				NCommandLine::EAnsiEncodingFlag _AnsiFlags
 				, NLog::ESeverity _Severities
 				, bool _bTrace
-				, mint _CategoryWidth = fg_GetSys()->f_GetEnvironmentVariable("MalterlibLogCategoryWidth", "32").f_ToInt(mint(32))
-				, mint _SeverityWidth = fg_GetSys()->f_GetEnvironmentVariable("MalterlibLogSeverityWidth", "10").f_ToInt(mint(10))
+				, umint _CategoryWidth = fg_GetSys()->f_GetEnvironmentVariable("MalterlibLogCategoryWidth", "32").f_ToInt(umint(32))
+				, umint _SeverityWidth = fg_GetSys()->f_GetEnvironmentVariable("MalterlibLogSeverityWidth", "10").f_ToInt(umint(10))
 			)
 		;
 
 		void operator()
 			(
-				mint _ThreadID
+				umint _ThreadID
 				, NTime::CTime const &_Time
 				, NLog::ESeverity _Sev
 				, NLog::CLogStr const &_Message
@@ -34,7 +34,7 @@ namespace NMib::NLog
 
 		NStr::CStrNonTracked f_FormatLog
 			(
-				mint _ThreadID
+				umint _ThreadID
 				, NTime::CTime const &_Time
 				, NLog::ESeverity _Sev
 				, NLog::CLogStr const &_Message
@@ -57,8 +57,8 @@ namespace NMib::NLog
 		NStr::CStr mp_CriticalColor;
 		NStr::CStr mp_Indent;
 
-		mint mp_CategoryWidth = 32;
-		mint mp_SeverityWidth = 10;
+		umint mp_CategoryWidth = 32;
+		umint mp_SeverityWidth = 10;
 
 		bool mp_bTrace = false;
 	};

@@ -113,12 +113,12 @@ namespace NMib::NLog
 		return false;
 	}
 
-	mint CNullLogger::f_PushGlobalDestination(FLogDestination &&_fLog)
+	umint CNullLogger::f_PushGlobalDestination(FLogDestination &&_fLog)
 	{
 		return 0;
 	}
 
-	mint CNullLogger::f_PushGlobalDestination(FLogDestination &&_fLog, CLogFilter&& _Filter)
+	umint CNullLogger::f_PushGlobalDestination(FLogDestination &&_fLog, CLogFilter&& _Filter)
 	{
 		return 0;
 	}
@@ -128,7 +128,7 @@ namespace NMib::NLog
 		 return true;
 	}
 
-	void CNullLogger::f_RemoveGlobalDestination(mint _ID)
+	void CNullLogger::f_RemoveGlobalDestination(umint _ID)
 	{
 	}
 
@@ -198,7 +198,7 @@ namespace NMib::NLog
 		if (!_pPath)
 			return nullptr;
 
-		mint Len = NStr::fg_StrLen(_pPath);
+		umint Len = NStr::fg_StrLen(_pPath);
 
 		if (!Len)
 			return nullptr;
@@ -241,8 +241,8 @@ namespace NMib::NLog
 		NThread::TCThreadLocal<CThreadInfo, NMemory::CAllocator_NonTrackedHeap> mp_ThreadInfo;
 
 		NThread::CMutualManyRead mp_GlobalDestLock; // TODO: Do without? Require global dests set at startup?
-		mint mp_NextGlobalDestinationID;
-		NContainer::TCMap<mint, NStorage::TCSharedPointer<CDestination, NMemory::CAllocator_NonTrackedHeap>, CSort_Default, NMemory::CAllocator_NonTrackedHeap> mp_GlobalDestinations;
+		umint mp_NextGlobalDestinationID;
+		NContainer::TCMap<umint, NStorage::TCSharedPointer<CDestination, NMemory::CAllocator_NonTrackedHeap>, CSort_Default, NMemory::CAllocator_NonTrackedHeap> mp_GlobalDestinations;
 
 		NContainer::TCVector< NStorage::TCUniquePointer<CLogFile> > mp_lConfigLogFiles;
 
@@ -342,7 +342,7 @@ namespace NMib::NLog
 	void CLogger::fp_AddGlobalDestination(CLogStr const& _Name, NContainer::TCVector<CLogStr> const& _lArgs)
 	{
 		auto fl_ParseFilter =
-			[](NContainer::TCVector<CLogStr> const& _lArgs, mint _iFirst, CLogFilter& _oFilter)
+			[](NContainer::TCVector<CLogStr> const& _lArgs, umint _iFirst, CLogFilter& _oFilter)
 			{
 
 				auto fl_ReadArg	=
@@ -419,26 +419,26 @@ namespace NMib::NLog
 		}
 	}
 
-	mint CLogger::f_PushGlobalDestination(FLogDestination &&_fLog, bool _bUseDispatcher)
+	umint CLogger::f_PushGlobalDestination(FLogDestination &&_fLog, bool _bUseDispatcher)
 	{
 		DMibLock(mp_pD->mp_GlobalDestLock);
-		mint ID = ++mp_pD->mp_NextGlobalDestinationID;
+		umint ID = ++mp_pD->mp_NextGlobalDestinationID;
 		CDetails::CDestination &NewDest = *(mp_pD->mp_GlobalDestinations[ID] = fg_Construct());
 		NewDest.m_bUseDispatcher = _bUseDispatcher;
 		NewDest.m_fLog = fg_Move(_fLog);
 		return ID;
 	}
 
-	void CLogger::f_RemoveGlobalDestination(mint _DestinationID)
+	void CLogger::f_RemoveGlobalDestination(umint _DestinationID)
 	{
 		DMibLock(mp_pD->mp_GlobalDestLock);
 		mp_pD->mp_GlobalDestinations.f_Remove(_DestinationID);
 	}
 
-	mint CLogger::f_PushGlobalDestination(FLogDestination &&_fLog, CLogFilter &&_Filter)
+	umint CLogger::f_PushGlobalDestination(FLogDestination &&_fLog, CLogFilter &&_Filter)
 	{
 		DMibLock(mp_pD->mp_GlobalDestLock);
-		mint ID = ++mp_pD->mp_NextGlobalDestinationID;
+		umint ID = ++mp_pD->mp_NextGlobalDestinationID;
 		CDetails::CDestination &NewDest = *(mp_pD->mp_GlobalDestinations[ID] = fg_Construct());
 		NewDest.m_fLog = fg_Move(_fLog);
 		NewDest.m_Filter = fg_Move(_Filter);
@@ -518,7 +518,7 @@ namespace NMib::NLog
 	{
 		NTime::CTime LogTime = NTime::CTime::fs_NowUTC();
 
-		mint ThreadID = NSys::fg_Thread_GetCurrentUID();
+		umint ThreadID = NSys::fg_Thread_GetCurrentUID();
 
 		auto &Details = *mp_pD;
 
@@ -600,7 +600,7 @@ namespace NMib::NLog
 
 	bool CLogFilter::f_Test
 		(
-			mint _ThreadID
+			umint _ThreadID
 			, NTime::CTime const& _Time
 			, ESeverity _Sev
 			, CLogStr const& _Message
@@ -646,13 +646,13 @@ namespace NMib::NLog
 
 		if (!m_File.f_IsEmpty())
 		{
-			mint FileLen = m_File.f_GetLen();
-			mint LocFileLen = NStr::fg_StrLen(_Loc.m_pFile);
+			umint FileLen = m_File.f_GetLen();
+			umint LocFileLen = NStr::fg_StrLen(_Loc.m_pFile);
 
 			if (FileLen > LocFileLen)
 				return false;
 
-			mint nOffset = LocFileLen - FileLen;
+			umint nOffset = LocFileLen - FileLen;
 
 			if (NStr::fg_StrCmpNoCase(m_File.f_GetStr(), _Loc.m_pFile + nOffset) != 0)
 				return false;
@@ -740,7 +740,7 @@ namespace NMib::NLog
 	{
 		return [pTraceLogger = &*g_AnsiLogger_Trace]
 			(
-				mint _ThreadID
+				umint _ThreadID
 				, NTime::CTime const &_Time
 				, ESeverity _Sev
 				, CLogStr const &_Message
@@ -758,7 +758,7 @@ namespace NMib::NLog
 	{
 		return [pStdErrLogger = &*g_AnsiLogger_StdErr]
 			(
-				mint _ThreadID
+				umint _ThreadID
 				, NTime::CTime const &_Time
 				, ESeverity _Sev
 				, CLogStr const &_Message
@@ -1034,7 +1034,7 @@ namespace NMib::NLog
 
 	void CFileLogger::operator()
 		(
-			mint _ThreadID
+			umint _ThreadID
 			, NTime::CTime const &_Time
 			, ESeverity _Sev
 			, CLogStr const &_Message
