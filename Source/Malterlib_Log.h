@@ -144,7 +144,7 @@ Hopefully not TL;DR:
 #include "Malterlib_Log_Configuration.h"
 
 #ifndef DMibSysLogSeverities
-	#define DMibSysLogSeverities DMibLogSeverity_All
+#	define DMibSysLogSeverities DMibLogSeverity_All
 #endif
 
 namespace NMib
@@ -154,27 +154,26 @@ namespace NMib
 
 namespace NMib::NLog
 {
-
 	enum ESeverity
 	{
-		ESeverity_None		= 0 // Only to be used in filters
+		ESeverity_None = 0 // Only to be used in filters
 
-		, ESeverity_Debug			= DMibBit(0)
-		, ESeverity_DebugVerbose1	= DMibBit(1)
-		, ESeverity_DebugVerbose2	= DMibBit(2)
-		, ESeverity_Info			= DMibBit(3)
-		, ESeverity_Warning			= DMibBit(4)
-		, ESeverity_Error			= DMibBit(5)
+		, ESeverity_Debug         = DMibBit(0)
+		, ESeverity_DebugVerbose1 = DMibBit(1)
+		, ESeverity_DebugVerbose2 = DMibBit(2)
+		, ESeverity_Info          = DMibBit(3)
+		, ESeverity_Warning       = DMibBit(4)
+		, ESeverity_Error         = DMibBit(5)
 
-		, ESeverity_Perf_Info		= DMibBit(6)
-		, ESeverity_Perf_Warning	= DMibBit(7)
-		, ESeverity_Perf_Error		= DMibBit(8)
+		, ESeverity_Perf_Info    = DMibBit(6)
+		, ESeverity_Perf_Warning = DMibBit(7)
+		, ESeverity_Perf_Error   = DMibBit(8)
 
-		, ESeverity_Critical		= DMibBit(9)
+		, ESeverity_Critical = DMibBit(9)
 
-		, ESeverity_DebugVerbose3	= DMibBit(10)
+		, ESeverity_DebugVerbose3 = DMibBit(10)
 
-		, ESeverity_All				= DMibBit(11) - 1	 // Only to be used in filters
+		, ESeverity_All = DMibBit(11) - 1 // Only to be used in filters
 	};
 
 	using CLogStr = NStr::CStrNonTracked;
@@ -189,7 +188,7 @@ namespace NMib::NLog
 		{
 		}
 
-		CLogLocationTag(CLogLocationTag const& _ToCopy)
+		CLogLocationTag(CLogLocationTag const &_ToCopy)
 			: m_pFile(_ToCopy.m_pFile)
 			, m_Line(_ToCopy.m_Line)
 		{
@@ -199,18 +198,18 @@ namespace NMib::NLog
 		int m_Line = 0;
 	};
 
-	char const* fg_GetSeverityName(ESeverity _Sev);
-	ESeverity fg_LookupSeverity(CLogStr const& _Name);
+	char const *fg_GetSeverityName(ESeverity _Sev);
+	ESeverity fg_LookupSeverity(CLogStr const &_Name);
 
 #if DMibSysLogSeverities
 	class CLogger;
 	class CNullLogger;
 
-	#if (DMibSysLogSeverities) != 0
-		using CSystemLogger = CLogger;
-	#else
-		using CSystemLogger = CNullLogger;
-	#endif
+#	if (DMibSysLogSeverities) != 0
+	using CSystemLogger = CLogger;
+#	else
+	using CSystemLogger = CNullLogger;
+#	endif
 
 	struct CSysLogCatScope : public CCoroutineThreadLocalHandler
 	{
@@ -243,33 +242,23 @@ namespace NMib::NLog
 			void
 			(
 				umint _ThreadID
-				, NTime::CTime const& _Time
+				, NTime::CTime const &_Time
 				, ESeverity _Sev
-				, CLogStr const& _Message
+				, CLogStr const &_Message
 				, NContainer::TCVector<NStr::CStr> const &_Categories
 				, NContainer::TCVector<NStr::CStr> const &_Operations
-				, CLogLocationTag const& _Loc
+				, CLogLocationTag const &_Loc
 			)
 		>
 	;
 
-	using FLogDispatch = NFunction::TCFunctionMovable
-		<
-			void (NFunction::TCFunctionMovable<void ()> &&_fToDispatch)
-		>
-	;
+	using FLogDispatch = NFunction::TCFunctionMovable<void (NFunction::TCFunctionMovable<void ()> &&_fToDispatch)>;
 
 	struct CLogFilter
 	{
 		CLogFilter() = default;
 
-		CLogFilter
-			(
-				ESeverity _FilterOnSeverity
-				, CLogStr const &_FilterOnCategory = {}
-				, CLogStr const &_FilterOnOperation = {}
-				, CLogStr const &_FilterOnFile = {}
-			)
+		CLogFilter(ESeverity _FilterOnSeverity, CLogStr const &_FilterOnCategory = {}, CLogStr const &_FilterOnOperation = {}, CLogStr const &_FilterOnFile = {})
 			: m_Severity(_FilterOnSeverity)
 			, m_Category(_FilterOnCategory)
 			, m_Operation(_FilterOnOperation)
@@ -279,8 +268,8 @@ namespace NMib::NLog
 
 		CLogFilter(CLogFilter const &) = default;
 		CLogFilter(CLogFilter &&) = default;
-		CLogFilter &operator=(CLogFilter &&) = default;
-		CLogFilter &operator=(CLogFilter const &) = default;
+		CLogFilter &operator = (CLogFilter &&) = default;
+		CLogFilter &operator = (CLogFilter const &) = default;
 
 		bool f_Test
 			(
@@ -300,32 +289,30 @@ namespace NMib::NLog
 		CLogStr m_File;
 	};
 
-	#define DLogLocTag NMib::NLog::CLogLocationTag(__FILE__, __LINE__)
+#	define DLogLocTag NMib::NLog::CLogLocationTag(__FILE__, __LINE__)
 
 	class CLogger
 	{
 	protected:
-
 		enum
 		{
-			Max_Scope_Depth = 32,
-			Max_Dest_Depth = 8,
+			Max_Scope_Depth  = 32
+			, Max_Dest_Depth = 8
 		};
 
 		struct CDetails;
 		NStorage::TCUniquePointer<CDetails> mp_pD;
 
-		void fp_AddGlobalDestination(CLogStr const& _Name, NContainer::TCVector<CLogStr> const& _lArgs);
+		void fp_AddGlobalDestination(CLogStr const &_Name, NContainer::TCVector<CLogStr> const &_lArgs);
 
 	public:
-
 		CLogger();
 		~CLogger();
 
-		bool f_ReadConfig(CLogStr const& _Path);
+		bool f_ReadConfig(CLogStr const &_Path);
 
 		umint f_PushGlobalDestination(FLogDestination &&_fLog, bool _bUseDispatcher = true);
-		umint f_PushGlobalDestination(FLogDestination &&_fLog, CLogFilter&& _Filter);
+		umint f_PushGlobalDestination(FLogDestination &&_fLog, CLogFilter &&_Filter);
 		bool f_PopGlobalDestination();
 		void f_RemoveGlobalDestination(umint _ID);
 
@@ -339,39 +326,37 @@ namespace NMib::NLog
 		void f_PushOperationScope(CSysLogOpScope &_Scope);
 		void f_PopOperationScope(CSysLogOpScope &_Scope);
 
-		void f_Log(CLogLocationTag _Loc, ESeverity _Sev, CLogStr const& _Str);
+		void f_Log(CLogLocationTag _Loc, ESeverity _Sev, CLogStr const &_Str);
 
 		void f_SetDispatcher(FLogDispatch &&_fDispatcher);
 
 		// Internal
-		void f_Submit(ESeverity _Sev, CLogStr&& _Text);
+		void f_Submit(ESeverity _Sev, CLogStr &&_Text);
 
 		// Disable
-		void f_PushCategoryScope(NStr::CStr const& _Str);
-		void f_PushCategoryScope(NStr::CWStr const& _Str);
-		void f_PushCategoryScope(NStr::CUStr const& _Str);
+		void f_PushCategoryScope(NStr::CStr const &_Str);
+		void f_PushCategoryScope(NStr::CWStr const &_Str);
+		void f_PushCategoryScope(NStr::CUStr const &_Str);
 
-		void f_PushOperationScope(NStr::CStr const& _Str);
-		void f_PushOperationScope(NStr::CWStr const& _Str);
-		void f_PushOperationScope(NStr::CUStr const& _Str);
+		void f_PushOperationScope(NStr::CStr const &_Str);
+		void f_PushOperationScope(NStr::CWStr const &_Str);
+		void f_PushOperationScope(NStr::CUStr const &_Str);
 
 		void f_PrepareFork();
 		void f_ForkedChild();
 		void f_ForkedParent();
-
 	};
 
 	class CNullLogger
 	{
-
 	public:
 		CNullLogger();
 		~CNullLogger();
 
-		bool f_ReadConfig(CLogStr const& _Path);
+		bool f_ReadConfig(CLogStr const &_Path);
 
 		umint f_PushGlobalDestination(FLogDestination &&_fLog);
-		umint f_PushGlobalDestination(FLogDestination &&_fLog, CLogFilter&& _Filter);
+		umint f_PushGlobalDestination(FLogDestination &&_fLog, CLogFilter &&_Filter);
 		bool f_PopGlobalDestination();
 		void f_RemoveGlobalDestination(umint _ID);
 
@@ -385,148 +370,148 @@ namespace NMib::NLog
 		void f_PushOperationScope(CSysLogOpScope &_Scope);
 		void f_PopOperationScope(CSysLogOpScope &_Scope);
 
-		void f_Log(CLogLocationTag _Loc, ESeverity _Sev, CLogStr const& _Str);
+		void f_Log(CLogLocationTag _Loc, ESeverity _Sev, CLogStr const &_Str);
 
 		// Internal
-		void f_Submit(ESeverity _Sev, CLogStr&& _Text);
+		void f_Submit(ESeverity _Sev, CLogStr &&_Text);
 
 		// Disable
-		void f_PushCategoryScope(NStr::CStr const& _Str);
-		void f_PushCategoryScope(NStr::CWStr const& _Str);
-		void f_PushCategoryScope(NStr::CUStr const& _Str);
+		void f_PushCategoryScope(NStr::CStr const &_Str);
+		void f_PushCategoryScope(NStr::CWStr const &_Str);
+		void f_PushCategoryScope(NStr::CUStr const &_Str);
 
-		void f_PushOperationScope(NStr::CStr const& _Str);
-		void f_PushOperationScope(NStr::CWStr const& _Str);
-		void f_PushOperationScope(NStr::CUStr const& _Str);
+		void f_PushOperationScope(NStr::CStr const &_Str);
+		void f_PushOperationScope(NStr::CWStr const &_Str);
+		void f_PushOperationScope(NStr::CUStr const &_Str);
 	};
 
-	template<typename tf_CMessage, typename... tfp_CArgs>
-	inline_always void fg_SysLog(CLogLocationTag _Loc, ESeverity _Sev, tf_CMessage &&_Msg, tfp_CArgs &&...p_Args)
+	template <typename tf_CMessage, typename ...tfp_CArgs>
+	inline_always void fg_SysLog(CLogLocationTag _Loc, ESeverity _Sev, tf_CMessage &&_Msg, tfp_CArgs && ...p_Args)
 	{
 		NMib::fg_GetSys()->f_GetLogger().f_Log(_Loc, _Sev, NStr::fg_Format<CLogStr>(fg_Forward<tf_CMessage>(_Msg), fg_Forward<tfp_CArgs>(p_Args)...));
 	}
 
 #endif
-// Internal Macros:
-	#define DMibLog_SevPaster(_Sev) DMibLog_##_Sev
-	#define DMibLogArgHelper(_R, _Data, _Elem)	<< (_Elem)
-	#define DMibLogWrap(...) (__VA_ARGS__)
+	// Internal Macros:
+#define DMibLog_SevPaster(_Sev) DMibLog_##_Sev
+#define DMibLogArgHelper(_R, _Data, _Elem)	<< (_Elem)
+#define DMibLogWrap(...) (__VA_ARGS__)
 
-	#if (DMibSysLogSeverities) & DMibLogSeverity_Debug
-		#define DMibLog_Debug(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_Debug, __VA_ARGS__)
-	#else
-		#define DMibLog_Debug(...) (void)0
-	#endif
+#if (DMibSysLogSeverities) & DMibLogSeverity_Debug
+#	define DMibLog_Debug(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_Debug, __VA_ARGS__)
+#else
+#	define DMibLog_Debug(...) (void)0
+#endif
 
-	#if (DMibSysLogSeverities) & DMibLogSeverity_DebugVerbose1
-		#define DMibLog_DebugVerbose1(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_DebugVerbose1, __VA_ARGS__)
-	#else
-		#define DMibLog_DebugVerbose1(...) (void)0
-	#endif
+#if (DMibSysLogSeverities) & DMibLogSeverity_DebugVerbose1
+#	define DMibLog_DebugVerbose1(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_DebugVerbose1, __VA_ARGS__)
+#else
+#	define DMibLog_DebugVerbose1(...) (void)0
+#endif
 
-	#if (DMibSysLogSeverities) & DMibLogSeverity_DebugVerbose2
-		#define DMibLog_DebugVerbose2(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_DebugVerbose2, __VA_ARGS__)
-	#else
-		#define DMibLog_DebugVerbose2(...) (void)0
-	#endif
+#if (DMibSysLogSeverities) & DMibLogSeverity_DebugVerbose2
+#	define DMibLog_DebugVerbose2(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_DebugVerbose2, __VA_ARGS__)
+#else
+#	define DMibLog_DebugVerbose2(...) (void)0
+#endif
 
-	#if (DMibSysLogSeverities) & DMibLogSeverity_DebugVerbose3
-		#define DMibLog_DebugVerbose3(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_DebugVerbose3, __VA_ARGS__)
-	#else
-		#define DMibLog_DebugVerbose3(...) (void)0
-	#endif
+#if (DMibSysLogSeverities) & DMibLogSeverity_DebugVerbose3
+#	define DMibLog_DebugVerbose3(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_DebugVerbose3, __VA_ARGS__)
+#else
+#	define DMibLog_DebugVerbose3(...) (void)0
+#endif
 
-	#if (DMibSysLogSeverities) & DMibLogSeverity_Info
-		#define DMibLog_Info(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_Info, __VA_ARGS__)
-	#else
-		#define DMibLog_Info(...) (void)0
-	#endif
+#if (DMibSysLogSeverities) & DMibLogSeverity_Info
+#	define DMibLog_Info(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_Info, __VA_ARGS__)
+#else
+#	define DMibLog_Info(...) (void)0
+#endif
 
-	#if (DMibSysLogSeverities) & DMibLogSeverity_Warning
-		#define DMibLog_Warning(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_Warning, __VA_ARGS__)
-	#else
-		#define DMibLog_Warning(...) (void)0
-	#endif
+#if (DMibSysLogSeverities) & DMibLogSeverity_Warning
+#	define DMibLog_Warning(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_Warning, __VA_ARGS__)
+#else
+#	define DMibLog_Warning(...) (void)0
+#endif
 
-	#if (DMibSysLogSeverities) & DMibLogSeverity_Error
-		#define DMibLog_Error(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_Error, __VA_ARGS__)
-	#else
-		#define DMibLog_Error(...) (void)0
-	#endif
+#if (DMibSysLogSeverities) & DMibLogSeverity_Error
+#	define DMibLog_Error(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_Error, __VA_ARGS__)
+#else
+#	define DMibLog_Error(...) (void)0
+#endif
 
-	#if (DMibSysLogSeverities) & DMibLogSeverity_Perf_Info
-		#define DMibLog_Perf_Info(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_Perf_Info, __VA_ARGS__)
-	#else
-		#define DMibLog_Perf_Info(...) (void)0
-	#endif
+#if (DMibSysLogSeverities) & DMibLogSeverity_Perf_Info
+#	define DMibLog_Perf_Info(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_Perf_Info, __VA_ARGS__)
+#else
+#	define DMibLog_Perf_Info(...) (void)0
+#endif
 
-	#if (DMibSysLogSeverities) & DMibLogSeverity_Perf_Warning
-		#define DMibLog_Perf_Warning(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_Perf_Warning, __VA_ARGS__)
-	#else
-		#define DMibLog_Perf_Warning(...) (void)0
-	#endif
+#if (DMibSysLogSeverities) & DMibLogSeverity_Perf_Warning
+#	define DMibLog_Perf_Warning(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_Perf_Warning, __VA_ARGS__)
+#else
+#	define DMibLog_Perf_Warning(...) (void)0
+#endif
 
-	#if (DMibSysLogSeverities) & DMibLogSeverity_Perf_Error
-		#define DMibLog_Perf_Error(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_Perf_Error, __VA_ARGS__)
-	#else
-		#define DMibLog_Perf_Error(...) (void)0
-	#endif
+#if (DMibSysLogSeverities) & DMibLogSeverity_Perf_Error
+#	define DMibLog_Perf_Error(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_Perf_Error, __VA_ARGS__)
+#else
+#	define DMibLog_Perf_Error(...) (void)0
+#endif
 
-	#if (DMibSysLogSeverities) & DMibLogSeverity_Critical
-		#define DMibLog_Critical(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_Critical, __VA_ARGS__)
-	#else
-		#define DMibLog_Critical(...) (void)0
-	#endif
+#if (DMibSysLogSeverities) & DMibLogSeverity_Critical
+#	define DMibLog_Critical(...) NMib::NLog::fg_SysLog(DLogLocTag, NMib::NLog::ESeverity_Critical, __VA_ARGS__)
+#else
+#	define DMibLog_Critical(...) (void)0
+#endif
 
-// Public Macros:
+	// Public Macros:
 
-	#define DMibLog(_Sev, ...) DMibLog_SevPaster(_Sev)(__VA_ARGS__)
+#define DMibLog(_Sev, ...) DMibLog_SevPaster(_Sev)(__VA_ARGS__)
 
-	#if (DMibSysLogSeverities) != 0
-		#define DMibLogCategory(_Category) NMib::NLog::CSysLogCatScope l_Cat##__LINE__(NMib::fg_GetSys()->f_GetLogger(), #_Category)
-		#define DMibLogCategoryEx(_Tag, _Category) NMib::NLog::CSysLogCatScope l_Cat##__LINE__##_Tag(NMib::fg_GetSys()->f_GetLogger(), #_Category)
-		#define DMibLogCategoryStr(d_Category) NMib::NLog::CSysLogCatScope l_Cat##__LINE__(NMib::fg_GetSys()->f_GetLogger(), d_Category)
+#if (DMibSysLogSeverities) != 0
+#	define DMibLogCategory(_Category) NMib::NLog::CSysLogCatScope l_Cat##__LINE__(NMib::fg_GetSys()->f_GetLogger(), #_Category)
+#	define DMibLogCategoryEx(_Tag, _Category) NMib::NLog::CSysLogCatScope l_Cat##__LINE__##_Tag(NMib::fg_GetSys()->f_GetLogger(), #_Category)
+#	define DMibLogCategoryStr(d_Category) NMib::NLog::CSysLogCatScope l_Cat##__LINE__(NMib::fg_GetSys()->f_GetLogger(), d_Category)
 
-		#define DMibLogOperation(_Op) NMib::NLog::CSysLogOpScope l_Cat##__LINE__(NMib::fg_GetSys()->f_GetLogger(), #_Op)
-		#define DMibLogOperationEx(_Tag, _Op) NMib::NLog::CSysLogOpScope l_Cat##__LINE__##_Tag(NMib::fg_GetSys()->f_GetLogger(), #_Op)
-	#else
-		#define DMibLogCategory(_Category) (void)0
-		#define DMibLogCategoryEx(_Tag, _Category) (void)0
-		#define DMibLogCategoryStr(d_Category) (void)0
+#	define DMibLogOperation(_Op) NMib::NLog::CSysLogOpScope l_Cat##__LINE__(NMib::fg_GetSys()->f_GetLogger(), #_Op)
+#	define DMibLogOperationEx(_Tag, _Op) NMib::NLog::CSysLogOpScope l_Cat##__LINE__##_Tag(NMib::fg_GetSys()->f_GetLogger(), #_Op)
+#else
+#	define DMibLogCategory(_Category) (void)0
+#	define DMibLogCategoryEx(_Tag, _Category) (void)0
+#	define DMibLogCategoryStr(d_Category) (void)0
 
-		#define DMibLogOperation(_Op) (void)0
-		#define DMibLogOperationEx(_Tag, _Op) (void)0
-	#endif
+#	define DMibLogOperation(_Op) (void)0
+#	define DMibLogOperationEx(_Tag, _Op) (void)0
+#endif
 
-	#define DMibLogCat(_Category) DMibLogCategory(_Category)
-	#define DMibLogCatEx(_Tag, _Category) DMibLogCategoryEx(_Tag, _Category)
-	#define DMibLogOp(_Op) DMibLogOperation(_Op)
-	#define DMibLogOpEx(_Tag, _Op) DMibLogOperationEx(_Tag, _Op)
+#define DMibLogCat(_Category) DMibLogCategory(_Category)
+#define DMibLogCatEx(_Tag, _Category) DMibLogCategoryEx(_Tag, _Category)
+#define DMibLogOp(_Op) DMibLogOperation(_Op)
+#define DMibLogOpEx(_Tag, _Op) DMibLogOperationEx(_Tag, _Op)
 
-	#define DMibLogWithCategory(d_Category, d_Severity, ...) [&]{DMibLogCategory(d_Category); DMibLog(d_Severity, __VA_ARGS__);}()
-	#define DMibLogWithCategoryStr(d_Category, d_Severity, ...) [&](::NMib::NStr::CStr const &_Category){DMibLogCategoryStr(_Category.f_GetStr()); DMibLog(d_Severity, __VA_ARGS__);}(d_Category)
+#define DMibLogWithCategory(d_Category, d_Severity, ...) [&]{DMibLogCategory(d_Category); DMibLog(d_Severity, __VA_ARGS__);}()
+#define DMibLogWithCategoryStr(d_Category, d_Severity, ...) \
+	[&](::NMib::NStr::CStr const &_Category){DMibLogCategoryStr(_Category.f_GetStr()); DMibLog(d_Severity, __VA_ARGS__);}(d_Category)
 
-	#ifndef DMibPNoShortCuts
-		#define DLog(_Sev, ...) DMibLog(_Sev, __VA_ARGS__)
-		#define DLogWithCategory DMibLogWithCategory
-		#define DLogWithCategoryStr DMibLogWithCategoryStr
-		#define DLogCategoryStr DMibLogCategoryStr
+#ifndef DMibPNoShortCuts
+#	define DLog(_Sev, ...) DMibLog(_Sev, __VA_ARGS__)
+#	define DLogWithCategory DMibLogWithCategory
+#	define DLogWithCategoryStr DMibLogWithCategoryStr
+#	define DLogCategoryStr DMibLogCategoryStr
 
-		#define DLogCategory(_Category) DMibLogCategory(_Category)
-		#define DLogCategoryEx(_Tag, _Category) DMibLogCategoryEx(_Tag, _Category)
-		#define DLogOperation(_Op) DMibLogOperation(_Op)
-		#define DLogOperationEx(_Tag, _Op) DMibLogOperationEx(_Tag, _Op)
+#	define DLogCategory(_Category) DMibLogCategory(_Category)
+#	define DLogCategoryEx(_Tag, _Category) DMibLogCategoryEx(_Tag, _Category)
+#	define DLogOperation(_Op) DMibLogOperation(_Op)
+#	define DLogOperationEx(_Tag, _Op) DMibLogOperationEx(_Tag, _Op)
 
-		#define DLogCat(_Category) DMibLogCat(_Category)
-		#define DLogCatEx(_Tag, _Category) DMibLogCatEx(_Tag, _Category)
-		#define DLogOp(_Op) DMibLogOp(_Op)
-		#define DLogOpEx(_Tag, _Op) DMibLogOpEx(_Tag, _Op)
-	#endif
-
+#	define DLogCat(_Category) DMibLogCat(_Category)
+#	define DLogCatEx(_Tag, _Category) DMibLogCatEx(_Tag, _Category)
+#	define DLogOp(_Op) DMibLogOp(_Op)
+#	define DLogOpEx(_Tag, _Op) DMibLogOpEx(_Tag, _Op)
+#endif
 }
 
 #include "Malterlib_Log.hpp"
 
 #ifndef DMibPNoShortCuts
-	using namespace NMib::NLog;
+using namespace NMib::NLog;
 #endif

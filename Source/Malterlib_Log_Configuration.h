@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 /*
-	Malterlib Logging Configuration Macros
+Malterlib Logging Configuration Macros
 
 */
 #pragma once
@@ -20,23 +20,35 @@
 #define DMibLogSeverity_Critical		512
 #define DMibLogSeverity_DebugVerbose3	1024
 #define DMibLogSeverity_All			(1 | 2 | 4 | 8 | 16 | 32 | 64 | 128 | 256 | 512 | 1024)
-#define DMibLogSeverity_AllNoPerfNoVerbose (DMibLogSeverity_All & ~(DMibLogSeverity_Perf_Info | DMibLogSeverity_Perf_Warning | DMibLogSeverity_Perf_Error | DMibLogSeverity_DebugVerbose1 | DMibLogSeverity_DebugVerbose2 | DMibLogSeverity_DebugVerbose3))
+#define DMibLogSeverity_AllNoPerfNoVerbose \
+	( \
+		DMibLogSeverity_All \
+		& ~ \
+		( \
+			DMibLogSeverity_Perf_Info \
+			| DMibLogSeverity_Perf_Warning \
+			| DMibLogSeverity_Perf_Error \
+			| DMibLogSeverity_DebugVerbose1 \
+			| DMibLogSeverity_DebugVerbose2 \
+			| DMibLogSeverity_DebugVerbose3 \
+		) \
+	)
 #define DMibLogSeverity_AllNoPerf (DMibLogSeverity_All & ~(DMibLogSeverity_Perf_Info | DMibLogSeverity_Perf_Warning | DMibLogSeverity_Perf_Error))
 
 // Define DMibSysLogSeverities to specify which severities to log.
 #ifndef DMibSysLogSeverities
 
-#if defined(DConfig_Release) || defined(DConfig_Optimized)
-	#define DMibSysLogSeverities DMibLogSeverity_None
-#elif defined(DConfig_ReleaseTesting)
-	#define DMibSysLogSeverities (DMibLogSeverity_Error | DMibLogSeverity_Critical | DMibLogSeverity_Warning | DMibLogSeverity_Info | DMibLogSeverity_Debug)
-#elif defined(DConfig_Profile)
-	#define DMibSysLogSeverities (DMibLogSeverity_Error | DMibLogSeverity_Perf_Info | DMibLogSeverity_Perf_Warning | DMibLogSeverity_Perf_Error | DMibLogSeverity_Critical)
-#elif defined(DMibDebug)
-	#define DMibSysLogSeverities DMibLogSeverity_AllNoPerfNoVerbose
-#else
-	#define DMibSysLogSeverities (DMibLogSeverity_Warning | DMibLogSeverity_Error | DMibLogSeverity_Critical)
-#endif
+#	if defined(DConfig_Release) || defined(DConfig_Optimized)
+#		define DMibSysLogSeverities DMibLogSeverity_None
+#	elif defined(DConfig_ReleaseTesting)
+#		define DMibSysLogSeverities (DMibLogSeverity_Error | DMibLogSeverity_Critical | DMibLogSeverity_Warning | DMibLogSeverity_Info | DMibLogSeverity_Debug)
+#	elif defined(DConfig_Profile)
+#		define DMibSysLogSeverities (DMibLogSeverity_Error | DMibLogSeverity_Perf_Info | DMibLogSeverity_Perf_Warning | DMibLogSeverity_Perf_Error | DMibLogSeverity_Critical)
+#	elif defined(DMibDebug)
+#		define DMibSysLogSeverities DMibLogSeverity_AllNoPerfNoVerbose
+#	else
+#		define DMibSysLogSeverities (DMibLogSeverity_Warning | DMibLogSeverity_Error | DMibLogSeverity_Critical)
+#	endif
 
 #endif
 

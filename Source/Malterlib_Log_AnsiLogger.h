@@ -20,7 +20,7 @@ namespace NMib::NLog
 			)
 		;
 
-		void operator()
+		void operator ()
 			(
 				umint _ThreadID
 				, NTime::CTime const &_Time
@@ -28,7 +28,7 @@ namespace NMib::NLog
 				, NLog::CLogStr const &_Message
 				, NContainer::TCVector<NStr::CStr> const &_Categories
 				, NContainer::TCVector<NStr::CStr> const &_Operations
-				, NLog::CLogLocationTag const& _Loc
+				, NLog::CLogLocationTag const &_Loc
 			)
 		;
 
@@ -40,7 +40,7 @@ namespace NMib::NLog
 				, NLog::CLogStr const &_Message
 				, NContainer::TCVector<NStr::CStr> const &_Categories
 				, NContainer::TCVector<NStr::CStr> const &_Operations
-				, NLog::CLogLocationTag const& _Loc
+				, NLog::CLogLocationTag const &_Loc
 			)
 		;
 

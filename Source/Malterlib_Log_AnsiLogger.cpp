@@ -136,7 +136,7 @@ namespace NMib::NLog
 				<< mp_AnsiEncoding.f_Default()
 				<< [&]() -> NStr::CStr const &
 				{
-					switch(_Sev)
+					switch (_Sev)
 					{
 					case NLog::ESeverity_None:
 					case NLog::ESeverity_Info:
@@ -177,7 +177,7 @@ namespace NMib::NLog
 		;
 	}
 
-	void CLogToStdErrAnsi::operator()
+	void CLogToStdErrAnsi::operator ()
 		(
 			umint _ThreadID
 			, NTime::CTime const &_Time

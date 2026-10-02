@@ -15,38 +15,25 @@ namespace NMib::NLog
 
 	char const *fg_GetSeverityName(ESeverity _Sev)
 	{
-		switch(_Sev)
+		switch (_Sev)
 		{
-			case ESeverity_None:
-				return "None";
-			case ESeverity_Debug:
-				return "Debug";
-			case ESeverity_DebugVerbose1:
-				return "DebugV1";
-			case ESeverity_DebugVerbose2:
-				return "DebugV2";
-			case ESeverity_DebugVerbose3:
-				return "DebugV3";
-			case ESeverity_Info:
-				return "Info";
-			case ESeverity_Warning:
-				return "Warning";
-			case ESeverity_Error:
-				return "Error";
-			case ESeverity_Perf_Info:
-				return "PInfo";
-			case ESeverity_Perf_Warning:
-				return "PWarning";
-			case ESeverity_Perf_Error:
-				return "PError";
-			case ESeverity_Critical:
-				return "Critical";
-			default:
-				return "Unknown";
+		case ESeverity_None: return "None";
+		case ESeverity_Debug: return "Debug";
+		case ESeverity_DebugVerbose1: return "DebugV1";
+		case ESeverity_DebugVerbose2: return "DebugV2";
+		case ESeverity_DebugVerbose3: return "DebugV3";
+		case ESeverity_Info: return "Info";
+		case ESeverity_Warning: return "Warning";
+		case ESeverity_Error: return "Error";
+		case ESeverity_Perf_Info: return "PInfo";
+		case ESeverity_Perf_Warning: return "PWarning";
+		case ESeverity_Perf_Error: return "PError";
+		case ESeverity_Critical: return "Critical";
+		default: return "Unknown";
 		}
 	}
 
-	ESeverity fg_LookupSeverity(CLogStr const& _Name)
+	ESeverity fg_LookupSeverity(CLogStr const &_Name)
 	{
 		if (_Name.f_CmpNoCase("None") == 0)
 			return ESeverity_None;
@@ -104,11 +91,12 @@ namespace NMib::NLog
 	CNullLogger::CNullLogger()
 	{
 	}
+
 	CNullLogger::~CNullLogger()
 	{
 	}
 
-	bool CNullLogger::f_ReadConfig(CLogStr const& _Path)
+	bool CNullLogger::f_ReadConfig(CLogStr const &_Path)
 	{
 		return false;
 	}
@@ -118,14 +106,14 @@ namespace NMib::NLog
 		return 0;
 	}
 
-	umint CNullLogger::f_PushGlobalDestination(FLogDestination &&_fLog, CLogFilter&& _Filter)
+	umint CNullLogger::f_PushGlobalDestination(FLogDestination &&_fLog, CLogFilter &&_Filter)
 	{
 		return 0;
 	}
 
 	bool CNullLogger::f_PopGlobalDestination()
 	{
-		 return true;
+		return true;
 	}
 
 	void CNullLogger::f_RemoveGlobalDestination(umint _ID)
@@ -160,40 +148,40 @@ namespace NMib::NLog
 	{
 	}
 
-	void CNullLogger::f_Log(CLogLocationTag _Loc, ESeverity _Sev, CLogStr const& _Str)
+	void CNullLogger::f_Log(CLogLocationTag _Loc, ESeverity _Sev, CLogStr const &_Str)
 	{
 	}
 
-	void CNullLogger::f_Submit(ESeverity _Sev, CLogStr&& _Text)
+	void CNullLogger::f_Submit(ESeverity _Sev, CLogStr &&_Text)
 	{
 	}
 
-	void CNullLogger::f_PushCategoryScope(NStr::CStr const& _Str)
+	void CNullLogger::f_PushCategoryScope(NStr::CStr const &_Str)
 	{
 	}
 
-	void CNullLogger::f_PushCategoryScope(NStr::CWStr const& _Str)
+	void CNullLogger::f_PushCategoryScope(NStr::CWStr const &_Str)
 	{
 	}
 
-	void CNullLogger::f_PushCategoryScope(NStr::CUStr const& _Str)
+	void CNullLogger::f_PushCategoryScope(NStr::CUStr const &_Str)
 	{
 	}
 
-	void CNullLogger::f_PushOperationScope(NStr::CStr const& _Str)
+	void CNullLogger::f_PushOperationScope(NStr::CStr const &_Str)
 	{
 	}
 
-	void CNullLogger::f_PushOperationScope(NStr::CWStr const& _Str)
+	void CNullLogger::f_PushOperationScope(NStr::CWStr const &_Str)
 	{
 	}
 
-	void CNullLogger::f_PushOperationScope(NStr::CUStr const& _Str)
+	void CNullLogger::f_PushOperationScope(NStr::CUStr const &_Str)
 	{
 	}
 
-#if 0
-	static char const* fg_ExtractFileName(char const* _pPath)
+#	if 0
+	static char const *fg_ExtractFileName(char const *_pPath)
 	{
 		if (!_pPath)
 			return nullptr;
@@ -203,21 +191,20 @@ namespace NMib::NLog
 		if (!Len)
 			return nullptr;
 
-		char const* pPtr = _pPath + (Len - 1);
-		char const* pEnd = _pPath - 1;
+		char const *pPtr = _pPath + (Len - 1);
+		char const *pEnd = _pPath - 1;
 
-		while(pPtr > pEnd)
+		while (pPtr > pEnd)
 		{
 			char Ch = *pPtr;
-			if (	Ch == '/'
-				||	Ch == '\\')
-				return pPtr +1 ;
+			if (Ch == '/' || Ch == '\\')
+				return pPtr + 1;
 			--pPtr;
 		}
 
 		return _pPath;
 	}
-#endif
+#	endif
 
 	struct CLogger::CDetails
 	{
@@ -244,7 +231,7 @@ namespace NMib::NLog
 		umint mp_NextGlobalDestinationID;
 		NContainer::TCMap<umint, NStorage::TCSharedPointer<CDestination, NMemory::CAllocator_NonTrackedHeap>, CSort_Default, NMemory::CAllocator_NonTrackedHeap> mp_GlobalDestinations;
 
-		NContainer::TCVector< NStorage::TCUniquePointer<CLogFile> > mp_lConfigLogFiles;
+		NContainer::TCVector<NStorage::TCUniquePointer<CLogFile>> mp_lConfigLogFiles;
 
 		FLogDispatch mp_Dispatcher;
 	};
@@ -277,16 +264,14 @@ namespace NMib::NLog
 		mp_pD->mp_GlobalDestLock.f_Unlock();
 	}
 
-	bool CLogger::f_ReadConfig(CLogStr const& _Path)
+	bool CLogger::f_ReadConfig(CLogStr const &_Path)
 	{
 		CLogStr Config;
 
 		try
 		{
 			if (CFile::fs_FileExists(_Path))
-			{
 				Config = CFile::fs_ReadStringFromFile(_Path);
-			}
 			else
 			{
 				CLogStr Path = CLogStr::CFormat("{}/{}") << fg_GetSys()->f_GetProgramRootNonTracked() << _Path;
@@ -298,9 +283,7 @@ namespace NMib::NLog
 					if (CFile::fs_FileExists(Path2))
 						Config = CFile::fs_ReadStringFromFile(Path2);
 					else
-					{
 						return false;
-					}
 				}
 			}
 		}
@@ -310,11 +293,11 @@ namespace NMib::NLog
 		}
 
 		CLogStr CurLine;
-		CLogStr::CChar const* pCurPos = Config.f_GetStr();
-		while(pCurPos && *pCurPos != 0)
+		CLogStr::CChar const *pCurPos = Config.f_GetStr();
+		while (pCurPos && *pCurPos != 0)
 		{
 			NStr::fg_ParseWhiteSpace(pCurPos);
-			CLogStr::CChar const* pLineEnd = pCurPos;
+			CLogStr::CChar const *pLineEnd = pCurPos;
 			NStr::fg_ParseToEndOfLine(pLineEnd);
 
 			CurLine = CLogStr(pCurPos, pLineEnd - pCurPos);
@@ -323,45 +306,37 @@ namespace NMib::NLog
 				CLogStr Dest = NStr::fg_GetStrSep(CurLine, ":");
 
 				NContainer::TCVector<CLogStr> lArgs;
-				while(!CurLine.f_IsEmpty())
-				{
-					lArgs.f_Insert( NStr::fg_GetStrSep(CurLine, ",").f_Trim() );
-				}
+				while (!CurLine.f_IsEmpty())
+					lArgs.f_Insert(NStr::fg_GetStrSep(CurLine, ",").f_Trim());
 
 				fp_AddGlobalDestination(Dest, lArgs);
-
 			}
 
 			pCurPos = pLineEnd;
 		}
 
-
 		return true;
 	}
 
-	void CLogger::fp_AddGlobalDestination(CLogStr const& _Name, NContainer::TCVector<CLogStr> const& _lArgs)
+	void CLogger::fp_AddGlobalDestination(CLogStr const &_Name, NContainer::TCVector<CLogStr> const &_lArgs)
 	{
-		auto fl_ParseFilter =
-			[](NContainer::TCVector<CLogStr> const& _lArgs, umint _iFirst, CLogFilter& _oFilter)
+		auto fl_ParseFilter = [](NContainer::TCVector<CLogStr> const &_lArgs, umint _iFirst, CLogFilter &_oFilter)
 			{
-
-				auto fl_ReadArg	=
-					[&]() -> CLogStr
+				auto fl_ReadArg = [&]() -> CLogStr
 					{
 						if (_iFirst < _lArgs.f_GetLen())
-						{
 							return _lArgs[_iFirst++];
-						}
 						else
 							return CLogStr();
-					};
+					}
+				;
 
 				_oFilter.m_Severity = ESeverity_None;
 
 				{ // Severity Filter
 					CLogStr Severities = fl_ReadArg();
 
-					while(!Severities.f_IsEmpty())
+					while (!Severities.f_IsEmpty())
 					{
 						CLogStr Sev = fg_GetStrSep(Severities, "|").f_Trim();
 
@@ -372,27 +347,22 @@ namespace NMib::NLog
 				{ // Category Filter
 					CLogStr Category = fl_ReadArg();
 					if (!Category.f_IsEmpty())
-					{
 						_oFilter.m_Category = Category;
-					}
 				}
 
 				{ // Operation Filter
 					CLogStr Operation = fl_ReadArg();
 					if (!Operation.f_IsEmpty())
-					{
 						_oFilter.m_Operation = Operation;
-					}
 				}
 
 				{ // File Filter
 					CLogStr File = fl_ReadArg();
 					if (!File.f_IsEmpty())
-					{
 						_oFilter.m_File = File;
-					}
 				}
-			};
+			}
+		;
 
 		CLogFilter Filter;
 
@@ -456,13 +426,13 @@ namespace NMib::NLog
 
 	void CLogger::f_PushDestination(FLogDestination &&_fLog)
 	{
-		CDetails::CDestination& NewDest = *((*mp_pD->mp_ThreadInfo).m_Destinations.f_Insert() = fg_Construct());
+		CDetails::CDestination &NewDest = *((*mp_pD->mp_ThreadInfo).m_Destinations.f_Insert() = fg_Construct());
 		NewDest.m_fLog = fg_Move(_fLog);
 	}
 
 	void CLogger::f_PushDestination(FLogDestination &&_fLog, CLogFilter const &_Filter)
 	{
-		CDetails::CDestination& NewDest = *((*mp_pD->mp_ThreadInfo).m_Destinations.f_Insert() = fg_Construct());
+		CDetails::CDestination &NewDest = *((*mp_pD->mp_ThreadInfo).m_Destinations.f_Insert() = fg_Construct());
 		NewDest.m_fLog = fg_Move(_fLog);
 		NewDest.m_Filter = _Filter;
 	}
@@ -514,7 +484,7 @@ namespace NMib::NLog
 		mp_pD->mp_Dispatcher = fg_Move(_fDispatcher);
 	}
 
-	void CLogger::f_Log(CLogLocationTag _Loc, ESeverity _Sev, CLogStr const& _Text)
+	void CLogger::f_Log(CLogLocationTag _Loc, ESeverity _Sev, CLogStr const &_Text)
 	{
 		NTime::CTime LogTime = NTime::CTime::fs_NowUTC();
 
@@ -524,25 +494,12 @@ namespace NMib::NLog
 
 		auto &ThreadInfo = *Details.mp_ThreadInfo;
 
-		auto fSendToDests =
-			[&](auto &_Container, auto const &_Categories, auto const &_Operations)
+		auto fSendToDests = [&](auto &_Container, auto const &_Categories, auto const &_Operations)
 			{
 				for (auto &pDestination : _Container)
 				{
 					auto &Destination = *pDestination;
-					if
-						(
-							Destination.m_Filter.f_Test
-							(
-								ThreadID
-								, LogTime
-								, _Sev
-								, _Text
-								, _Categories
-								, _Operations
-								, _Loc
-							)
-						)
+					if (Destination.m_Filter.f_Test(ThreadID, LogTime, _Sev, _Text, _Categories, _Operations, _Loc))
 					{
 						if (Details.mp_Dispatcher && Destination.m_bUseDispatcher)
 						{
@@ -550,35 +507,13 @@ namespace NMib::NLog
 								(
 									[pDestination, ThreadID, LogTime, _Sev, _Text, _Categories, _Operations, _Loc]() mutable
 									{
-										pDestination->m_fLog
-											(
-												ThreadID
-												, LogTime
-												, _Sev
-												, _Text
-												, _Categories
-												, _Operations
-												, _Loc
-											)
-										;
+										pDestination->m_fLog(ThreadID, LogTime, _Sev, _Text, _Categories, _Operations, _Loc);
 									}
 								)
 							;
 						}
 						else
-						{
-							Destination.m_fLog
-								(
-									ThreadID
-									, LogTime
-									, _Sev
-									, _Text
-									, _Categories
-									, _Operations
-									, _Loc
-								)
-							;
-						}
+							Destination.m_fLog(ThreadID, LogTime, _Sev, _Text, _Categories, _Operations, _Loc);
 					}
 				}
 			}
@@ -601,12 +536,12 @@ namespace NMib::NLog
 	bool CLogFilter::f_Test
 		(
 			umint _ThreadID
-			, NTime::CTime const& _Time
+			, NTime::CTime const &_Time
 			, ESeverity _Sev
-			, CLogStr const& _Message
+			, CLogStr const &_Message
 			, NContainer::TCVector<NStr::CStr> const &_Categories
 			, NContainer::TCVector<NStr::CStr> const &_Operations
-			, CLogLocationTag const& _Loc
+			, CLogLocationTag const &_Loc
 		)
 	{
 		if (m_Severity != ESeverity_None && (_Sev & m_Severity) == 0)
@@ -727,7 +662,6 @@ namespace NMib::NLog
 
 	constinit static NStorage::TCAggregate<CAnsiLoggerConfig_StdErr> g_AnsiLogger_StdErr = {DAggregateInit};
 
-
 	struct CAnsiLoggerConfig_Trace : public CAnsiLoggerConfig
 	{
 		CAnsiLoggerConfig_Trace()
@@ -777,7 +711,6 @@ namespace NMib::NLog
 	CLogFile::CLogFile()
 		: m_bFilenameUsedTime(false)
 	{
-
 	}
 
 	CLogFile::~CLogFile()
@@ -814,11 +747,11 @@ namespace NMib::NLog
 
 		bool fg_RenameLogFile(CLogStr const &_LogFile, CLogStr const &_DestPath, CLogStr const &_Name, CLogStr const &_Extension)
 		{
-#ifdef DPlatformFamily_Windows
+#	ifdef DPlatformFamily_Windows
 			static constexpr EFileOpen c_CheckOldOpenFlags = gc_LogOpenFlags;
-#else
+#	else
 			static constexpr EFileOpen c_CheckOldOpenFlags = EFileOpen_Write | EFileOpen_DontTruncate | EFileOpen_Read | EFileOpen_NoLocalCache;
-#endif
+#	endif
 
 			if (!CFile::fs_FileExists(_LogFile, EFileAttrib_File))
 				return true;
@@ -945,7 +878,7 @@ namespace NMib::NLog
 		if (DestPath.f_IsEmpty())
 			DestPath = CFile::fs_GetLogDirectoryNonTracked();
 
-		if (DestPath[DestPath.f_GetLen()-1] != '/')
+		if (DestPath[DestPath.f_GetLen() - 1] != '/')
 			DestPath += "/";
 		CLogStr Name = CFile::fs_GetFileNoExt(m_Filename);
 		CLogStr Extension = CFile::fs_GetExtension(m_Filename);
@@ -959,7 +892,7 @@ namespace NMib::NLog
 				CFile::fs_CreateDirectory(DestPath);
 				m_File.f_Open(LogFile, EFileOpen_Write | EFileOpen_Read | EFileOpen_ShareRead | EFileOpen_NoLocalCache, gc_LogFilePermissions);
 			}
-			catch (CExceptionFile const&)
+			catch (CExceptionFile const &)
 			{
 				return false;
 			}
@@ -968,8 +901,7 @@ namespace NMib::NLog
 		else
 		{
 			auto bOldEnable = NException::fg_SetEnableExceptionTrace(false);
-			auto Cleanup
-				= fg_OnScopeExit
+			auto Cleanup = fg_OnScopeExit
 				(
 					[&]
 					{
@@ -1034,7 +966,7 @@ namespace NMib::NLog
 
 	constinit static NStorage::TCAggregate<CAnsiLoggerConfig_File> g_AnsiLogger_File = {DAggregateInit};
 
-	void CFileLogger::operator()
+	void CFileLogger::operator ()
 		(
 			umint _ThreadID
 			, NTime::CTime const &_Time
@@ -1047,14 +979,14 @@ namespace NMib::NLog
 	{
 		auto &AnsiLogger = *g_AnsiLogger_File;
 
-		CLogFile* pLogFile = mp_pLogFile;
+		CLogFile *pLogFile = mp_pLogFile;
 
 		DMibLock(pLogFile->m_Lock);
 
 		if (!pLogFile->f_ReadyForWrite())
 			return;
 
-		CFile* pFile = &pLogFile->m_File;
+		CFile *pFile = &pLogFile->m_File;
 
 		NTime::CTimeConvert::CDateTime DateTime;
 		NTime::CTimeConvert(_Time.f_ToLocal()).f_ExtractDateTime(DateTime);
@@ -1062,10 +994,10 @@ namespace NMib::NLog
 		CLogStr Text = AnsiLogger.m_AnsiLogger.f_FormatLog(_ThreadID, _Time, _Sev, _Message, _Categories, _Operations, _Loc);
 
 		pFile->f_Write(Text.f_GetStr(), Text.f_GetLen() * sizeof(CLogStr::CChar));
-#ifdef DPlatformFamily_macOS
+#	ifdef DPlatformFamily_macOS
 		// Without this no file change notification will be triggered
 		pFile->f_SetLength(pFile->f_GetLength());
-#endif
+#	endif
 	}
 #endif
 }
