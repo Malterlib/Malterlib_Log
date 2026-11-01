@@ -32,15 +32,15 @@ namespace NMib::NLog
 	{
 		CFileLogger(CLogFile *_pLogFile);
 
-		void operator()
+		void operator ()
 			(
 				umint _ThreadID
-				, NTime::CTime const& _Time
+				, NTime::CTime const &_Time
 				, ESeverity _Sev
-				, CLogStr const& _Message
+				, CLogStr const &_Message
 				, NContainer::TCVector<NStr::CStr> const &_Categories
 				, NContainer::TCVector<NStr::CStr> const &_Operations
-				, CLogLocationTag const& _Loc
+				, CLogLocationTag const &_Loc
 			)
 		;
 
@@ -56,8 +56,7 @@ namespace NMib::NLog
 		CLogFilter mp_Filter;
 
 	public:
-
-		CLogToFile(CLogger& _Logger, CLogStr const& _File)
+		CLogToFile(CLogger &_Logger, CLogStr const &_File)
 			: mp_Logger(_Logger)
 		{
 			mp_File.m_Filename = _File;
@@ -88,27 +87,26 @@ namespace NMib::NLog
 		}
 	};
 
-	#define DMibLogToFile(_File) NMib::NLog::CLogToFile l_LogToFile##__LINE__(NMib::fg_GetSys()->f_GetLogger(), _File)
-	#define DMibLogToFileEx(_Tag, _File) NMib::NLog::CLogToFile l_LogToFile##__LINE__##_Tag(NMib::fg_GetSys()->f_GetLogger(), _File)
-	#define DMibLogToFileFiltered(_File, _Filter) NMib::NLog::CLogToFile l_LogToFile##__LINE__(NMib::fg_GetSys()->f_GetLogger(), _File, _Filter)
-	#define DMibLogToFileFilteredEx(_Tag, _File, _Filter) NMib::NLog::CLogToFile l_LogToFile##__LINE__##_Tag(NMib::fg_GetSys()->f_GetLogger(), _File, _Filter)
+#	define DMibLogToFile(_File) NMib::NLog::CLogToFile l_LogToFile##__LINE__(NMib::fg_GetSys()->f_GetLogger(), _File)
+#	define DMibLogToFileEx(_Tag, _File) NMib::NLog::CLogToFile l_LogToFile##__LINE__##_Tag(NMib::fg_GetSys()->f_GetLogger(), _File)
+#	define DMibLogToFileFiltered(_File, _Filter) NMib::NLog::CLogToFile l_LogToFile##__LINE__(NMib::fg_GetSys()->f_GetLogger(), _File, _Filter)
+#	define DMibLogToFileFilteredEx(_Tag, _File, _Filter) NMib::NLog::CLogToFile l_LogToFile##__LINE__##_Tag(NMib::fg_GetSys()->f_GetLogger(), _File, _Filter)
 
 #else
-	#define DMibLogToFile(_File) (void)0
-	#define DMibLogToFileEx(_Tag, _File) (void)0
-	#define DMibLogToFileFiltered(_File, _Filter) (void)0
-	#define DMibLogToFileFilteredEx(_Tag, _File, _Filter) (void)0
+#	define DMibLogToFile(_File) (void)0
+#	define DMibLogToFileEx(_Tag, _File) (void)0
+#	define DMibLogToFileFiltered(_File, _Filter) (void)0
+#	define DMibLogToFileFilteredEx(_Tag, _File, _Filter) (void)0
 #endif
 
-	#ifndef DMibPNoShortCuts
-		#define DLogToFile(_File) DMibLogToFile(_File)
-		#define DLogToFileEx(_Tag, _File) DMibLogToFileEx(_Tag, _File)
-		#define DLogToFileFiltered(_File, _Filter) DMibLogToFileFiltered(_File, _Filter)
-		#define DLogToFileFilteredEx(_Tag, _File, _Filter) DMibLogToFileFilteredEx(_Tag, _File, _Filter)
-	#endif
-
+#ifndef DMibPNoShortCuts
+#	define DLogToFile(_File) DMibLogToFile(_File)
+#	define DLogToFileEx(_Tag, _File) DMibLogToFileEx(_Tag, _File)
+#	define DLogToFileFiltered(_File, _Filter) DMibLogToFileFiltered(_File, _Filter)
+#	define DLogToFileFilteredEx(_Tag, _File, _Filter) DMibLogToFileFilteredEx(_Tag, _File, _Filter)
+#endif
 }
 
 #ifndef DMibPNoShortCuts
-	using namespace NMib::NLog;
+using namespace NMib::NLog;
 #endif

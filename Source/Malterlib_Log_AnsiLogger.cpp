@@ -47,7 +47,7 @@ namespace NMib::NLog
 		return CUStr::CFormat(str_utf32("{}…{}")) << _String.f_Left(LeftLen) << _String.f_Right(RightLen);
 	}
 
-	NStr::CStrNonTracked CLogToStdErrAnsi::f_FormatLog
+	auto CLogToStdErrAnsi::f_FormatLog
 		(
 			umint _ThreadID
 			, NTime::CTime const &_Time
@@ -57,6 +57,7 @@ namespace NMib::NLog
 			, NContainer::TCVector<NStr::CStr> const &_Operations
 			, NLog::CLogLocationTag const &_Loc
 		)
+		-> NStr::CStrNonTracked
 	{
 		if ((_Sev & mp_Severities) == NLog::ESeverity_None)
 			return {};
@@ -136,7 +137,7 @@ namespace NMib::NLog
 				<< mp_AnsiEncoding.f_Default()
 				<< [&]() -> NStr::CStr const &
 				{
-					switch(_Sev)
+					switch (_Sev)
 					{
 					case NLog::ESeverity_None:
 					case NLog::ESeverity_Info:
@@ -177,7 +178,7 @@ namespace NMib::NLog
 		;
 	}
 
-	void CLogToStdErrAnsi::operator()
+	void CLogToStdErrAnsi::operator ()
 		(
 			umint _ThreadID
 			, NTime::CTime const &_Time
