@@ -394,8 +394,8 @@ namespace NMib::NLog
 
 #endif
 	// Internal Macros:
-#define DMibLog_SevPaster(_Sev) DMibLog_##_Sev
-#define DMibLogArgHelper(_R, _Data, _Elem)	<< (_Elem)
+#define DMibLog_SevPaster(d_Sev) DMibLog_##d_Sev
+#define DMibLogArgHelper(d_Repeat, d_Data, d_Elem)	<< (d_Elem)
 #define DMibLogWrap(...) (__VA_ARGS__)
 
 #if (DMibSysLogSeverities) & DMibLogSeverity_Debug
@@ -466,48 +466,48 @@ namespace NMib::NLog
 
 	// Public Macros:
 
-#define DMibLog(_Sev, ...) DMibLog_SevPaster(_Sev)(__VA_ARGS__)
+#define DMibLog(d_Sev, ...) DMibLog_SevPaster(d_Sev)(__VA_ARGS__)
 
 #if (DMibSysLogSeverities) != 0
-#	define DMibLogCategory(_Category) NMib::NLog::CSysLogCatScope l_Cat##__LINE__(NMib::fg_GetSys()->f_GetLogger(), #_Category)
-#	define DMibLogCategoryEx(_Tag, _Category) NMib::NLog::CSysLogCatScope l_Cat##__LINE__##_Tag(NMib::fg_GetSys()->f_GetLogger(), #_Category)
+#	define DMibLogCategory(d_Category) NMib::NLog::CSysLogCatScope l_Cat##__LINE__(NMib::fg_GetSys()->f_GetLogger(), #d_Category)
+#	define DMibLogCategoryEx(d_Tag, d_Category) NMib::NLog::CSysLogCatScope l_Cat##__LINE__##d_Tag(NMib::fg_GetSys()->f_GetLogger(), #d_Category)
 #	define DMibLogCategoryStr(d_Category) NMib::NLog::CSysLogCatScope l_Cat##__LINE__(NMib::fg_GetSys()->f_GetLogger(), d_Category)
 
-#	define DMibLogOperation(_Op) NMib::NLog::CSysLogOpScope l_Cat##__LINE__(NMib::fg_GetSys()->f_GetLogger(), #_Op)
-#	define DMibLogOperationEx(_Tag, _Op) NMib::NLog::CSysLogOpScope l_Cat##__LINE__##_Tag(NMib::fg_GetSys()->f_GetLogger(), #_Op)
+#	define DMibLogOperation(d_Op) NMib::NLog::CSysLogOpScope l_Cat##__LINE__(NMib::fg_GetSys()->f_GetLogger(), #d_Op)
+#	define DMibLogOperationEx(d_Tag, d_Op) NMib::NLog::CSysLogOpScope l_Cat##__LINE__##d_Tag(NMib::fg_GetSys()->f_GetLogger(), #d_Op)
 #else
-#	define DMibLogCategory(_Category) (void)0
-#	define DMibLogCategoryEx(_Tag, _Category) (void)0
+#	define DMibLogCategory(d_Category) (void)0
+#	define DMibLogCategoryEx(d_Tag, d_Category) (void)0
 #	define DMibLogCategoryStr(d_Category) (void)0
 
-#	define DMibLogOperation(_Op) (void)0
-#	define DMibLogOperationEx(_Tag, _Op) (void)0
+#	define DMibLogOperation(d_Op) (void)0
+#	define DMibLogOperationEx(d_Tag, d_Op) (void)0
 #endif
 
-#define DMibLogCat(_Category) DMibLogCategory(_Category)
-#define DMibLogCatEx(_Tag, _Category) DMibLogCategoryEx(_Tag, _Category)
-#define DMibLogOp(_Op) DMibLogOperation(_Op)
-#define DMibLogOpEx(_Tag, _Op) DMibLogOperationEx(_Tag, _Op)
+#define DMibLogCat(d_Category) DMibLogCategory(d_Category)
+#define DMibLogCatEx(d_Tag, d_Category) DMibLogCategoryEx(d_Tag, d_Category)
+#define DMibLogOp(d_Op) DMibLogOperation(d_Op)
+#define DMibLogOpEx(d_Tag, d_Op) DMibLogOperationEx(d_Tag, d_Op)
 
 #define DMibLogWithCategory(d_Category, d_Severity, ...) [&]{DMibLogCategory(d_Category); DMibLog(d_Severity, __VA_ARGS__);}()
 #define DMibLogWithCategoryStr(d_Category, d_Severity, ...) \
 	[&](::NMib::NStr::CStr const &_Category){DMibLogCategoryStr(_Category.f_GetStr()); DMibLog(d_Severity, __VA_ARGS__);}(d_Category)
 
 #ifndef DMibPNoShortCuts
-#	define DLog(_Sev, ...) DMibLog(_Sev, __VA_ARGS__)
+#	define DLog(d_Sev, ...) DMibLog(d_Sev, __VA_ARGS__)
 #	define DLogWithCategory DMibLogWithCategory
 #	define DLogWithCategoryStr DMibLogWithCategoryStr
 #	define DLogCategoryStr DMibLogCategoryStr
 
-#	define DLogCategory(_Category) DMibLogCategory(_Category)
-#	define DLogCategoryEx(_Tag, _Category) DMibLogCategoryEx(_Tag, _Category)
-#	define DLogOperation(_Op) DMibLogOperation(_Op)
-#	define DLogOperationEx(_Tag, _Op) DMibLogOperationEx(_Tag, _Op)
+#	define DLogCategory(d_Category) DMibLogCategory(d_Category)
+#	define DLogCategoryEx(d_Tag, d_Category) DMibLogCategoryEx(d_Tag, d_Category)
+#	define DLogOperation(d_Op) DMibLogOperation(d_Op)
+#	define DLogOperationEx(d_Tag, d_Op) DMibLogOperationEx(d_Tag, d_Op)
 
-#	define DLogCat(_Category) DMibLogCat(_Category)
-#	define DLogCatEx(_Tag, _Category) DMibLogCatEx(_Tag, _Category)
-#	define DLogOp(_Op) DMibLogOp(_Op)
-#	define DLogOpEx(_Tag, _Op) DMibLogOpEx(_Tag, _Op)
+#	define DLogCat(d_Category) DMibLogCat(d_Category)
+#	define DLogCatEx(d_Tag, d_Category) DMibLogCatEx(d_Tag, d_Category)
+#	define DLogOp(d_Op) DMibLogOp(d_Op)
+#	define DLogOpEx(d_Tag, d_Op) DMibLogOpEx(d_Tag, d_Op)
 #endif
 }
 
