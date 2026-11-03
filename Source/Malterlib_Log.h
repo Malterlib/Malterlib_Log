@@ -295,11 +295,8 @@ namespace NMib::NLog
 	struct CLogger
 	{
 	protected:
-		enum
-		{
-			Max_Scope_Depth  = 32
-			, Max_Dest_Depth = 8
-		};
+		static constexpr aint mc_Max_Scope_Depth = 32;
+		static constexpr aint mc_Max_Dest_Depth = 8;
 
 		struct CDetails;
 		NStorage::TCUniquePointer<CDetails> mp_pD;
