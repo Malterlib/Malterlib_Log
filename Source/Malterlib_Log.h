@@ -295,11 +295,11 @@ namespace NMib::NLog
 	struct CLogger
 	{
 	protected:
-		static constexpr aint mc_Max_Scope_Depth = 32;
-		static constexpr aint mc_Max_Dest_Depth = 8;
+		static constexpr aint mcp_Max_Scope_Depth = 32;
+		static constexpr aint mcp_Max_Dest_Depth = 8;
 
 		struct CDetails;
-		NStorage::TCUniquePointer<CDetails> mp_pD;
+		NStorage::TCUniquePointer<CDetails> mp_pDetails;
 
 		void fp_AddGlobalDestination(CLogStr const &_Name, NContainer::TCVector<CLogStr> const &_Args);
 

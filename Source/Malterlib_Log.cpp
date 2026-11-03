@@ -225,20 +225,20 @@ namespace NMib::NLog
 			NContainer::TCVector<NStorage::TCSharedPointer<CDestination, NMemory::CAllocator_NonTrackedHeap>, NMemory::CAllocator_NonTrackedHeap> m_Destinations;
 		};
 
-		NThread::TCThreadLocal<CThreadInfo, NMemory::CAllocator_NonTrackedHeap> mp_ThreadInfo;
+		NThread::TCThreadLocal<CThreadInfo, NMemory::CAllocator_NonTrackedHeap> m_ThreadInfo;
 
-		NThread::CMutualManyRead mp_GlobalDestLock; // TODO: Do without? Require global dests set at startup?
-		umint mp_NextGlobalDestinationID;
-		NContainer::TCMap<umint, NStorage::TCSharedPointer<CDestination, NMemory::CAllocator_NonTrackedHeap>, CSort_Default, NMemory::CAllocator_NonTrackedHeap> mp_GlobalDestinations;
+		NThread::CMutualManyRead m_GlobalDestLock; // TODO: Do without? Require global dests set at startup?
+		umint m_NextGlobalDestinationID;
+		NContainer::TCMap<umint, NStorage::TCSharedPointer<CDestination, NMemory::CAllocator_NonTrackedHeap>, CSort_Default, NMemory::CAllocator_NonTrackedHeap> m_GlobalDestinations;
 
-		NContainer::TCVector<NStorage::TCUniquePointer<CLogFile>> mp_lConfigLogFiles;
+		NContainer::TCVector<NStorage::TCUniquePointer<CLogFile>> m_ConfigLogFiles;
 
-		FLogDispatch mp_Dispatcher;
+		FLogDispatch m_Dispatcher;
 	};
 
 	CLogger::CLogger()
 	{
-		mp_pD = fg_Construct();
+		mp_pDetails = fg_Construct();
 		DMibCheck(true); // Add dependency to check system
 	}
 
@@ -248,20 +248,20 @@ namespace NMib::NLog
 
 	void CLogger::f_PrepareFork()
 	{
-		mp_pD->mp_GlobalDestLock.f_Lock();
-		mp_pD->mp_GlobalDestLock.f_PrepareFork();
+		mp_pDetails->m_GlobalDestLock.f_Lock();
+		mp_pDetails->m_GlobalDestLock.f_PrepareFork();
 	}
 
 	void CLogger::f_ForkedChild()
 	{
-		mp_pD->mp_GlobalDestLock.f_ForkedChild();
-		mp_pD->mp_GlobalDestLock.f_Unlock();
+		mp_pDetails->m_GlobalDestLock.f_ForkedChild();
+		mp_pDetails->m_GlobalDestLock.f_Unlock();
 	}
 
 	void CLogger::f_ForkedParent()
 	{
-		mp_pD->mp_GlobalDestLock.f_ForkedParent();
-		mp_pD->mp_GlobalDestLock.f_Unlock();
+		mp_pDetails->m_GlobalDestLock.f_ForkedParent();
+		mp_pDetails->m_GlobalDestLock.f_Unlock();
 	}
 
 	bool CLogger::f_ReadConfig(CLogStr const &_Path)
@@ -305,11 +305,11 @@ namespace NMib::NLog
 			{
 				CLogStr Dest = NStr::fg_GetStrSep(CurLine, ":");
 
-				NContainer::TCVector<CLogStr> lArgs;
+				NContainer::TCVector<CLogStr> Args;
 				while (!CurLine.f_IsEmpty())
-					lArgs.f_Insert(NStr::fg_GetStrSep(CurLine, ",").f_Trim());
+					Args.f_Insert(NStr::fg_GetStrSep(CurLine, ",").f_Trim());
 
-				fp_AddGlobalDestination(Dest, lArgs);
+				fp_AddGlobalDestination(Dest, Args);
 			}
 
 			pCurPos = pLineEnd;
@@ -320,9 +320,9 @@ namespace NMib::NLog
 
 	void CLogger::fp_AddGlobalDestination(CLogStr const &_Name, NContainer::TCVector<CLogStr> const &_Args)
 	{
-		auto fl_ParseFilter = [](NContainer::TCVector<CLogStr> const &_Args, umint _iFirst, CLogFilter &o_Filter)
+		auto fParseFilter = [](NContainer::TCVector<CLogStr> const &_Args, umint _iFirst, CLogFilter &o_Filter)
 			{
-				auto fl_ReadArg = [&]() -> CLogStr
+				auto fReadArg = [&]() -> CLogStr
 					{
 						if (_iFirst < _Args.f_GetLen())
 							return _Args[_iFirst++];
@@ -334,7 +334,7 @@ namespace NMib::NLog
 				o_Filter.m_Severity = ESeverity_None;
 
 				{ // Severity Filter
-					CLogStr Severities = fl_ReadArg();
+					CLogStr Severities = fReadArg();
 
 					while (!Severities.f_IsEmpty())
 					{
@@ -345,19 +345,19 @@ namespace NMib::NLog
 				}
 
 				{ // Category Filter
-					CLogStr Category = fl_ReadArg();
+					CLogStr Category = fReadArg();
 					if (!Category.f_IsEmpty())
 						o_Filter.m_Category = Category;
 				}
 
 				{ // Operation Filter
-					CLogStr Operation = fl_ReadArg();
+					CLogStr Operation = fReadArg();
 					if (!Operation.f_IsEmpty())
 						o_Filter.m_Operation = Operation;
 				}
 
 				{ // File Filter
-					CLogStr File = fl_ReadArg();
+					CLogStr File = fReadArg();
 					if (!File.f_IsEmpty())
 						o_Filter.m_File = File;
 				}
@@ -368,7 +368,7 @@ namespace NMib::NLog
 
 		if (_Name.f_CmpNoCase("DebugOut") == 0)
 		{
-			fl_ParseFilter(_Args, 0, Filter);
+			fParseFilter(_Args, 0, Filter);
 			f_PushGlobalDestination(fg_LogTo_DebugOut(), fg_Move(Filter));
 		}
 		else if (_Name.f_CmpNoCase("File") == 0)
@@ -377,7 +377,7 @@ namespace NMib::NLog
 				return;
 
 			CLogStr LogFile = _Args[0];
-			fl_ParseFilter(_Args, 1, Filter);
+			fParseFilter(_Args, 1, Filter);
 
 			NStorage::TCUniquePointer<CLogFile> pLogFile = fg_Construct();
 
@@ -385,15 +385,15 @@ namespace NMib::NLog
 
 			f_PushGlobalDestination(CFileLogger(pLogFile.f_Get()), fg_Move(Filter));
 
-			mp_pD->mp_lConfigLogFiles.f_Insert(fg_Move(pLogFile));
+			mp_pDetails->m_ConfigLogFiles.f_Insert(fg_Move(pLogFile));
 		}
 	}
 
 	umint CLogger::f_PushGlobalDestination(FLogDestination &&_fLog, bool _bUseDispatcher)
 	{
-		DMibLock(mp_pD->mp_GlobalDestLock);
-		umint ID = ++mp_pD->mp_NextGlobalDestinationID;
-		CDetails::CDestination &NewDest = *(mp_pD->mp_GlobalDestinations[ID] = fg_Construct());
+		DMibLock(mp_pDetails->m_GlobalDestLock);
+		umint ID = ++mp_pDetails->m_NextGlobalDestinationID;
+		CDetails::CDestination &NewDest = *(mp_pDetails->m_GlobalDestinations[ID] = fg_Construct());
 		NewDest.m_bUseDispatcher = _bUseDispatcher;
 		NewDest.m_fLog = fg_Move(_fLog);
 		return ID;
@@ -401,15 +401,15 @@ namespace NMib::NLog
 
 	void CLogger::f_RemoveGlobalDestination(umint _DestinationID)
 	{
-		DMibLock(mp_pD->mp_GlobalDestLock);
-		mp_pD->mp_GlobalDestinations.f_Remove(_DestinationID);
+		DMibLock(mp_pDetails->m_GlobalDestLock);
+		mp_pDetails->m_GlobalDestinations.f_Remove(_DestinationID);
 	}
 
 	umint CLogger::f_PushGlobalDestination(FLogDestination &&_fLog, CLogFilter &&_Filter)
 	{
-		DMibLock(mp_pD->mp_GlobalDestLock);
-		umint ID = ++mp_pD->mp_NextGlobalDestinationID;
-		CDetails::CDestination &NewDest = *(mp_pD->mp_GlobalDestinations[ID] = fg_Construct());
+		DMibLock(mp_pDetails->m_GlobalDestLock);
+		umint ID = ++mp_pDetails->m_NextGlobalDestinationID;
+		CDetails::CDestination &NewDest = *(mp_pDetails->m_GlobalDestinations[ID] = fg_Construct());
 		NewDest.m_fLog = fg_Move(_fLog);
 		NewDest.m_Filter = fg_Move(_Filter);
 		return ID;
@@ -417,49 +417,49 @@ namespace NMib::NLog
 
 	bool CLogger::f_PopGlobalDestination()
 	{
-		DMibLock(mp_pD->mp_GlobalDestLock);
-		if (mp_pD->mp_GlobalDestinations.f_IsEmpty())
+		DMibLock(mp_pDetails->m_GlobalDestLock);
+		if (mp_pDetails->m_GlobalDestinations.f_IsEmpty())
 			return false;
-		mp_pD->mp_GlobalDestinations.f_Remove(mp_pD->mp_GlobalDestinations.f_FindLargest());
-		return !mp_pD->mp_GlobalDestinations.f_IsEmpty();
+		mp_pDetails->m_GlobalDestinations.f_Remove(mp_pDetails->m_GlobalDestinations.f_FindLargest());
+		return !mp_pDetails->m_GlobalDestinations.f_IsEmpty();
 	}
 
 	void CLogger::f_PushDestination(FLogDestination &&_fLog)
 	{
-		CDetails::CDestination &NewDest = *((*mp_pD->mp_ThreadInfo).m_Destinations.f_Insert() = fg_Construct());
+		CDetails::CDestination &NewDest = *((*mp_pDetails->m_ThreadInfo).m_Destinations.f_Insert() = fg_Construct());
 		NewDest.m_fLog = fg_Move(_fLog);
 	}
 
 	void CLogger::f_PushDestination(FLogDestination &&_fLog, CLogFilter const &_Filter)
 	{
-		CDetails::CDestination &NewDest = *((*mp_pD->mp_ThreadInfo).m_Destinations.f_Insert() = fg_Construct());
+		CDetails::CDestination &NewDest = *((*mp_pDetails->m_ThreadInfo).m_Destinations.f_Insert() = fg_Construct());
 		NewDest.m_fLog = fg_Move(_fLog);
 		NewDest.m_Filter = _Filter;
 	}
 
 	void CLogger::f_PopDestination()
 	{
-		(*mp_pD->mp_ThreadInfo).m_Destinations.f_Pop();
+		(*mp_pDetails->m_ThreadInfo).m_Destinations.f_Pop();
 	}
 
 	void CLogger::f_PushCategoryScope(CSysLogCatScope &_Scope)
 	{
-		(*mp_pD->mp_ThreadInfo).m_CategoryStack.f_InsertFirst(_Scope);
+		(*mp_pDetails->m_ThreadInfo).m_CategoryStack.f_InsertFirst(_Scope);
 	}
 
 	void CLogger::f_PopCategoryScope(CSysLogCatScope &_Scope)
 	{
-		(*mp_pD->mp_ThreadInfo).m_CategoryStack.f_Remove(_Scope);
+		(*mp_pDetails->m_ThreadInfo).m_CategoryStack.f_Remove(_Scope);
 	}
 
 	void CLogger::f_PushOperationScope(CSysLogOpScope &_Scope)
 	{
-		(*mp_pD->mp_ThreadInfo).m_OperationStack.f_InsertFirst(_Scope);
+		(*mp_pDetails->m_ThreadInfo).m_OperationStack.f_InsertFirst(_Scope);
 	}
 
 	void CLogger::f_PopOperationScope(CSysLogOpScope &_Scope)
 	{
-		(*mp_pD->mp_ThreadInfo).m_OperationStack.f_Remove(_Scope);
+		(*mp_pDetails->m_ThreadInfo).m_OperationStack.f_Remove(_Scope);
 	}
 
 	NContainer::TCVector<NStr::CStr> CLogger::CDetails::CThreadInfo::f_GetCategoryScopeStack() const
@@ -480,8 +480,8 @@ namespace NMib::NLog
 
 	void CLogger::f_SetDispatcher(FLogDispatch &&_fDispatcher)
 	{
-		DMibLock(mp_pD->mp_GlobalDestLock);
-		mp_pD->mp_Dispatcher = fg_Move(_fDispatcher);
+		DMibLock(mp_pDetails->m_GlobalDestLock);
+		mp_pDetails->m_Dispatcher = fg_Move(_fDispatcher);
 	}
 
 	void CLogger::f_Log(CLogLocationTag _Loc, ESeverity _Sev, CLogStr const &_Text)
@@ -490,9 +490,9 @@ namespace NMib::NLog
 
 		umint ThreadID = NSys::fg_Thread_GetCurrentUID();
 
-		auto &Details = *mp_pD;
+		auto &Details = *mp_pDetails;
 
-		auto &ThreadInfo = *Details.mp_ThreadInfo;
+		auto &ThreadInfo = *Details.m_ThreadInfo;
 
 		auto fSendToDests = [&](auto &_Container, auto const &_Categories, auto const &_Operations)
 			{
@@ -501,9 +501,9 @@ namespace NMib::NLog
 					auto &Destination = *pDestination;
 					if (Destination.m_Filter.f_Test(ThreadID, LogTime, _Sev, _Text, _Categories, _Operations, _Loc))
 					{
-						if (Details.mp_Dispatcher && Destination.m_bUseDispatcher)
+						if (Details.m_Dispatcher && Destination.m_bUseDispatcher)
 						{
-							Details.mp_Dispatcher
+							Details.m_Dispatcher
 								(
 									[pDestination, ThreadID, LogTime, _Sev, _Text, _Categories, _Operations, _Loc]() mutable
 									{
@@ -519,15 +519,15 @@ namespace NMib::NLog
 			}
 		;
 		{
-			DMibLockRead(Details.mp_GlobalDestLock);
-			if (ThreadInfo.m_Destinations.f_IsEmpty() && Details.mp_GlobalDestinations.f_IsEmpty())
+			DMibLockRead(Details.m_GlobalDestLock);
+			if (ThreadInfo.m_Destinations.f_IsEmpty() && Details.m_GlobalDestinations.f_IsEmpty())
 				return;
 
 			auto Cats = ThreadInfo.f_GetCategoryScopeStack();
 			auto Ops = ThreadInfo.f_GetOperationScopeStack();
 
 			fSendToDests(ThreadInfo.m_Destinations, Cats, Ops);
-			fSendToDests(Details.mp_GlobalDestinations, Cats, Ops);
+			fSendToDests(Details.m_GlobalDestinations, Cats, Ops);
 		}
 	}
 
@@ -661,7 +661,7 @@ namespace NMib::NLog
 		}
 	};
 
-	constinit static NStorage::TCAggregate<CAnsiLoggerConfig_StdErr> g_AnsiLogger_StdErr = {DAggregateInit};
+	constinit static NStorage::TCAggregate<CAnsiLoggerConfig_StdErr> gs_AnsiLogger_StdErr = {DAggregateInit};
 
 	struct CAnsiLoggerConfig_Trace : public CAnsiLoggerConfig
 	{
@@ -671,11 +671,11 @@ namespace NMib::NLog
 		}
 	};
 
-	constinit static NStorage::TCAggregate<CAnsiLoggerConfig_Trace> g_AnsiLogger_Trace = {DAggregateInit};
+	constinit static NStorage::TCAggregate<CAnsiLoggerConfig_Trace> gs_AnsiLogger_Trace = {DAggregateInit};
 
 	FLogDestination fg_LogTo_DebugOut()
 	{
-		return [pTraceLogger = &*g_AnsiLogger_Trace]
+		return [pTraceLogger = &*gs_AnsiLogger_Trace]
 			(
 				umint _ThreadID
 				, NTime::CTime const &_Time
@@ -693,7 +693,7 @@ namespace NMib::NLog
 
 	FLogDestination fg_LogTo_StdErr()
 	{
-		return [pStdErrLogger = &*g_AnsiLogger_StdErr]
+		return [pStdErrLogger = &*gs_AnsiLogger_StdErr]
 			(
 				umint _ThreadID
 				, NTime::CTime const &_Time
@@ -965,7 +965,7 @@ namespace NMib::NLog
 		}
 	};
 
-	constinit static NStorage::TCAggregate<CAnsiLoggerConfig_File> g_AnsiLogger_File = {DAggregateInit};
+	constinit static NStorage::TCAggregate<CAnsiLoggerConfig_File> gs_AnsiLogger_File = {DAggregateInit};
 
 	void CFileLogger::operator ()
 		(
@@ -978,7 +978,7 @@ namespace NMib::NLog
 			, CLogLocationTag const &_Loc
 		)
 	{
-		auto &AnsiLogger = *g_AnsiLogger_File;
+		auto &AnsiLogger = *gs_AnsiLogger_File;
 
 		CLogFile *pLogFile = mp_pLogFile;
 
