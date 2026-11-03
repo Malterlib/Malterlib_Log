@@ -233,7 +233,7 @@ namespace NMib::NLog
 
 		NContainer::TCVector<NStorage::TCUniquePointer<CLogFile>> m_ConfigLogFiles;
 
-		FLogDispatch m_Dispatcher;
+		FLogDispatch m_fDispatcher;
 	};
 
 	CLogger::CLogger()
@@ -481,7 +481,7 @@ namespace NMib::NLog
 	void CLogger::f_SetDispatcher(FLogDispatch &&_fDispatcher)
 	{
 		DMibLock(mp_pDetails->m_GlobalDestLock);
-		mp_pDetails->m_Dispatcher = fg_Move(_fDispatcher);
+		mp_pDetails->m_fDispatcher = fg_Move(_fDispatcher);
 	}
 
 	void CLogger::f_Log(CLogLocationTag _Loc, ESeverity _Sev, CLogStr const &_Text)
@@ -501,9 +501,9 @@ namespace NMib::NLog
 					auto &Destination = *pDestination;
 					if (Destination.m_Filter.f_Test(ThreadID, LogTime, _Sev, _Text, _Categories, _Operations, _Loc))
 					{
-						if (Details.m_Dispatcher && Destination.m_bUseDispatcher)
+						if (Details.m_fDispatcher && Destination.m_bUseDispatcher)
 						{
-							Details.m_Dispatcher
+							Details.m_fDispatcher
 								(
 									[pDestination, ThreadID, LogTime, _Sev, _Text, _Categories, _Operations, _Loc]() mutable
 									{
