@@ -202,8 +202,8 @@ namespace NMib::NLog
 	ESeverity fg_LookupSeverity(CLogStr const &_Name);
 
 #if DMibSysLogSeverities
-	class CLogger;
-	class CNullLogger;
+	struct CLogger;
+	struct CNullLogger;
 
 #	if (DMibSysLogSeverities) != 0
 	using CSystemLogger = CLogger;
@@ -292,7 +292,7 @@ namespace NMib::NLog
 
 #	define DLogLocTag NMib::NLog::CLogLocationTag(__FILE__, __LINE__)
 
-	class CLogger
+	struct CLogger
 	{
 	protected:
 		enum
@@ -348,9 +348,8 @@ namespace NMib::NLog
 		void f_ForkedParent();
 	};
 
-	class CNullLogger
+	struct CNullLogger
 	{
-	public:
 		CNullLogger();
 		~CNullLogger();
 
