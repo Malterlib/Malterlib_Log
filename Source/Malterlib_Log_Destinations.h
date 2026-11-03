@@ -56,35 +56,11 @@ namespace NMib::NLog
 		CLogFilter mp_Filter;
 
 	public:
-		CLogToFile(CLogger &_Logger, CLogStr const &_File)
-			: mp_Logger(_Logger)
-		{
-			mp_File.m_Filename = _File;
-			mp_Logger.f_PushDestination(CFileLogger(&mp_File));
-		}
-
-		CLogToFile(CLogger &_Logger, CLogStr const &_File, CLogFilter &&_Filter)
-			: mp_Logger(_Logger)
-			, mp_Filter(fg_Move(_Filter))
-		{
-			mp_File.m_Filename = _File;
-			mp_Logger.f_PushDestination(CFileLogger(&mp_File), mp_Filter);
-		}
-
-		~CLogToFile()
-		{
-			mp_Logger.f_PopDestination();
-		}
-
-		void f_Suspend() noexcept override
-		{
-			mp_Logger.f_PopDestination();
-		}
-
-		void f_ResumeNoExcept() noexcept override
-		{
-			mp_Logger.f_PushDestination(CFileLogger(&mp_File), mp_Filter);
-		}
+		CLogToFile(CLogger &_Logger, CLogStr const &_File);
+		CLogToFile(CLogger &_Logger, CLogStr const &_File, CLogFilter &&_Filter);
+		~CLogToFile();
+		void f_Suspend() noexcept override;
+		void f_ResumeNoExcept() noexcept override;
 	};
 
 #	define DMibLogToFile(d_File) NMib::NLog::CLogToFile l_LogToFile##__LINE__(NMib::fg_GetSys()->f_GetLogger(), d_File)

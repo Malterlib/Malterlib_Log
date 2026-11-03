@@ -13,6 +13,18 @@ namespace NMib::NLog
 {
 	using namespace NFile;
 
+	CLogLocationTag::CLogLocationTag(ch8 const *_pFile, int _Line)
+		: m_pFile(_pFile)
+		, m_Line(_Line)
+	{
+	}
+
+	CLogLocationTag::CLogLocationTag(CLogLocationTag const &_ToCopy)
+		: m_pFile(_ToCopy.m_pFile)
+		, m_Line(_ToCopy.m_Line)
+	{
+	}
+
 	char const *fg_GetSeverityName(ESeverity _Sev)
 	{
 		switch (_Sev)
@@ -533,6 +545,14 @@ namespace NMib::NLog
 
 	// CLogFilter
 
+	CLogFilter::CLogFilter(ESeverity _FilterOnSeverity, CLogStr const &_FilterOnCategory, CLogStr const &_FilterOnOperation, CLogStr const &_FilterOnFile)
+		: m_Severity(_FilterOnSeverity)
+		, m_Category(_FilterOnCategory)
+		, m_Operation(_FilterOnOperation)
+		, m_File(_FilterOnFile)
+	{
+	}
+
 	auto CLogFilter::f_Test
 		(
 			umint _ThreadID
@@ -999,6 +1019,36 @@ namespace NMib::NLog
 		// Without this no file change notification will be triggered
 		pFile->f_SetLength(pFile->f_GetLength());
 #	endif
+	}
+
+	CLogToFile::CLogToFile(CLogger &_Logger, CLogStr const &_File)
+		: mp_Logger(_Logger)
+	{
+		mp_File.m_Filename = _File;
+		mp_Logger.f_PushDestination(CFileLogger(&mp_File));
+	}
+
+	CLogToFile::CLogToFile(CLogger &_Logger, CLogStr const &_File, CLogFilter &&_Filter)
+		: mp_Logger(_Logger)
+		, mp_Filter(fg_Move(_Filter))
+	{
+		mp_File.m_Filename = _File;
+		mp_Logger.f_PushDestination(CFileLogger(&mp_File), mp_Filter);
+	}
+
+	CLogToFile::~CLogToFile()
+	{
+		mp_Logger.f_PopDestination();
+	}
+
+	void CLogToFile::f_Suspend() noexcept
+	{
+		mp_Logger.f_PopDestination();
+	}
+
+	void CLogToFile::f_ResumeNoExcept() noexcept
+	{
+		mp_Logger.f_PushDestination(CFileLogger(&mp_File), mp_Filter);
 	}
 #endif
 }

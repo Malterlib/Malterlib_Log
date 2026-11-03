@@ -181,18 +181,8 @@ namespace NMib::NLog
 	struct CLogLocationTag
 	{
 		CLogLocationTag() = default;
-
-		CLogLocationTag(ch8 const *_pFile, int _Line)
-			: m_pFile(_pFile)
-			, m_Line(_Line)
-		{
-		}
-
-		CLogLocationTag(CLogLocationTag const &_ToCopy)
-			: m_pFile(_ToCopy.m_pFile)
-			, m_Line(_ToCopy.m_Line)
-		{
-		}
+		CLogLocationTag(ch8 const *_pFile, int _Line);
+		CLogLocationTag(CLogLocationTag const &_ToCopy);
 
 		ch8 const *m_pFile = nullptr;
 		int m_Line = 0;
@@ -257,15 +247,7 @@ namespace NMib::NLog
 	struct CLogFilter
 	{
 		CLogFilter() = default;
-
-		CLogFilter(ESeverity _FilterOnSeverity, CLogStr const &_FilterOnCategory = {}, CLogStr const &_FilterOnOperation = {}, CLogStr const &_FilterOnFile = {})
-			: m_Severity(_FilterOnSeverity)
-			, m_Category(_FilterOnCategory)
-			, m_Operation(_FilterOnOperation)
-			, m_File(_FilterOnFile)
-		{
-		}
-
+		CLogFilter(ESeverity _FilterOnSeverity, CLogStr const &_FilterOnCategory = {}, CLogStr const &_FilterOnOperation = {}, CLogStr const &_FilterOnFile = {});
 		CLogFilter(CLogFilter const &_Other) = default;
 		CLogFilter(CLogFilter &&_Other) = default;
 		CLogFilter &operator = (CLogFilter &&_Other) = default;
@@ -383,10 +365,7 @@ namespace NMib::NLog
 	};
 
 	template <typename tf_CMessage, typename ...tfp_CArgs>
-	inline_always void fg_SysLog(CLogLocationTag _Loc, ESeverity _Sev, tf_CMessage &&_Msg, tfp_CArgs && ...p_Args)
-	{
-		NMib::fg_GetSys()->f_GetLogger().f_Log(_Loc, _Sev, NStr::fg_Format<CLogStr>(fg_Forward<tf_CMessage>(_Msg), fg_Forward<tfp_CArgs>(p_Args)...));
-	}
+	inline_always void fg_SysLog(CLogLocationTag _Loc, ESeverity _Sev, tf_CMessage &&_Msg, tfp_CArgs && ...p_Args);
 
 #endif
 	// Internal Macros:
