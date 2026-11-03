@@ -266,10 +266,10 @@ namespace NMib::NLog
 		{
 		}
 
-		CLogFilter(CLogFilter const &) = default;
-		CLogFilter(CLogFilter &&) = default;
-		CLogFilter &operator = (CLogFilter &&) = default;
-		CLogFilter &operator = (CLogFilter const &) = default;
+		CLogFilter(CLogFilter const &_Other) = default;
+		CLogFilter(CLogFilter &&_Other) = default;
+		CLogFilter &operator = (CLogFilter &&_Other) = default;
+		CLogFilter &operator = (CLogFilter const &_Other) = default;
 
 		auto f_Test
 			(
@@ -301,7 +301,7 @@ namespace NMib::NLog
 		struct CDetails;
 		NStorage::TCUniquePointer<CDetails> mp_pD;
 
-		void fp_AddGlobalDestination(CLogStr const &_Name, NContainer::TCVector<CLogStr> const &_lArgs);
+		void fp_AddGlobalDestination(CLogStr const &_Name, NContainer::TCVector<CLogStr> const &_Args);
 
 	public:
 		CLogger();

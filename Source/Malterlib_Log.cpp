@@ -318,20 +318,20 @@ namespace NMib::NLog
 		return true;
 	}
 
-	void CLogger::fp_AddGlobalDestination(CLogStr const &_Name, NContainer::TCVector<CLogStr> const &_lArgs)
+	void CLogger::fp_AddGlobalDestination(CLogStr const &_Name, NContainer::TCVector<CLogStr> const &_Args)
 	{
-		auto fl_ParseFilter = [](NContainer::TCVector<CLogStr> const &_lArgs, umint _iFirst, CLogFilter &_oFilter)
+		auto fl_ParseFilter = [](NContainer::TCVector<CLogStr> const &_Args, umint _iFirst, CLogFilter &o_Filter)
 			{
 				auto fl_ReadArg = [&]() -> CLogStr
 					{
-						if (_iFirst < _lArgs.f_GetLen())
-							return _lArgs[_iFirst++];
+						if (_iFirst < _Args.f_GetLen())
+							return _Args[_iFirst++];
 						else
 							return CLogStr();
 					}
 				;
 
-				_oFilter.m_Severity = ESeverity_None;
+				o_Filter.m_Severity = ESeverity_None;
 
 				{ // Severity Filter
 					CLogStr Severities = fl_ReadArg();
@@ -340,26 +340,26 @@ namespace NMib::NLog
 					{
 						CLogStr Sev = fg_GetStrSep(Severities, "|").f_Trim();
 
-						_oFilter.m_Severity |= fg_LookupSeverity(Sev);
+						o_Filter.m_Severity |= fg_LookupSeverity(Sev);
 					}
 				}
 
 				{ // Category Filter
 					CLogStr Category = fl_ReadArg();
 					if (!Category.f_IsEmpty())
-						_oFilter.m_Category = Category;
+						o_Filter.m_Category = Category;
 				}
 
 				{ // Operation Filter
 					CLogStr Operation = fl_ReadArg();
 					if (!Operation.f_IsEmpty())
-						_oFilter.m_Operation = Operation;
+						o_Filter.m_Operation = Operation;
 				}
 
 				{ // File Filter
 					CLogStr File = fl_ReadArg();
 					if (!File.f_IsEmpty())
-						_oFilter.m_File = File;
+						o_Filter.m_File = File;
 				}
 			}
 		;
@@ -368,16 +368,16 @@ namespace NMib::NLog
 
 		if (_Name.f_CmpNoCase("DebugOut") == 0)
 		{
-			fl_ParseFilter(_lArgs, 0, Filter);
+			fl_ParseFilter(_Args, 0, Filter);
 			f_PushGlobalDestination(fg_LogTo_DebugOut(), fg_Move(Filter));
 		}
 		else if (_Name.f_CmpNoCase("File") == 0)
 		{
-			if (_lArgs.f_IsEmpty())
+			if (_Args.f_IsEmpty())
 				return;
 
-			CLogStr LogFile = _lArgs[0];
-			fl_ParseFilter(_lArgs, 1, Filter);
+			CLogStr LogFile = _Args[0];
+			fl_ParseFilter(_Args, 1, Filter);
 
 			NStorage::TCUniquePointer<CLogFile> pLogFile = fg_Construct();
 
