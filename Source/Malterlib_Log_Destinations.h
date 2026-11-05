@@ -13,19 +13,20 @@ namespace NMib::NLog
 
 	struct CLogFile
 	{
-		CLogStr m_Filename;
-		CLogStr m_Directory;
-		bool m_bFilenameUsedTime;
-		NFile::CFile m_File;
-		NThread::CMutual m_Lock;
-
 		CLogFile();
 		~CLogFile();
+
 		bool f_ReadyForWrite();
 
 		void f_PrepareFork();
 		void f_ForkedChild();
 		void f_ForkedParent();
+
+		CLogStr m_Filename;
+		CLogStr m_Directory;
+		bool m_bFilenameUsedTime;
+		NFile::CFile m_File;
+		NThread::CMutual m_Lock;
 	};
 
 	struct CFileLogger
@@ -50,17 +51,17 @@ namespace NMib::NLog
 
 	struct CLogToFile : public CCoroutineThreadLocalHandler
 	{
+		CLogToFile(CLogger &_Logger, CLogStr const &_File);
+		CLogToFile(CLogger &_Logger, CLogStr const &_File, CLogFilter &&_Filter);
+		~CLogToFile();
+
+		void f_Suspend() noexcept override;
+		void f_ResumeNoExcept() noexcept override;
+
 	private:
 		CLogger &mp_Logger;
 		CLogFile mp_File;
 		CLogFilter mp_Filter;
-
-	public:
-		CLogToFile(CLogger &_Logger, CLogStr const &_File);
-		CLogToFile(CLogger &_Logger, CLogStr const &_File, CLogFilter &&_Filter);
-		~CLogToFile();
-		void f_Suspend() noexcept override;
-		void f_ResumeNoExcept() noexcept override;
 	};
 
 #	define DMibLogToFile(d_File) NMib::NLog::CLogToFile l_LogToFile##__LINE__(NMib::fg_GetSys()->f_GetLogger(), d_File)

@@ -621,75 +621,84 @@ namespace NMib::NLog
 
 	struct CAnsiLoggerConfig
 	{
-		static ESeverity fs_GetSeveritiesFilter(NStr::CStr const &_SettingsName)
-		{
-			using namespace NStr;
+		CAnsiLoggerConfig(NStr::CStr const &_SettingsName, NCommandLine::EAnsiEncodingFlag _DefaultColor, bool _bTrace);
 
-			ESeverity LogSeverities = ESeverity_All;
-			auto CustomSeverities = fg_GetSys()->f_GetEnvironmentVariable("{}Severities"_f << _SettingsName, "");
-			if (CustomSeverities)
-			{
-				LogSeverities = ESeverity_None;
-				for (auto &SeverityName : CustomSeverities.f_Split(","))
-					LogSeverities |= fg_LookupSeverity(SeverityName.f_Trim());
-			}
-
-			return LogSeverities;
-		}
-
-		static NCommandLine::EAnsiEncodingFlag fs_GetAnsiFlags(NStr::CStr const &_SettingsName, NCommandLine::EAnsiEncodingFlag _DefaultColor)
-		{
-			using namespace NStr;
-
-			NCommandLine::EAnsiEncodingFlag Flags = _DefaultColor;
-			auto LogSettings = fg_GetSys()->f_GetEnvironmentVariable("{}Color"_f << _SettingsName, {});
-			if (LogSettings == "true")
-				Flags = NCommandLine::EAnsiEncodingFlag_Color | NCommandLine::EAnsiEncodingFlag_Color24Bit | NCommandLine::EAnsiEncodingFlag_BoxDrawing;
-			else if (LogSettings != "false")
-			{
-				for (auto &Setting : LogSettings.f_Split(","))
-				{
-					if (Setting == "Color")
-						Flags |= NCommandLine::EAnsiEncodingFlag_Color;
-					else if (Setting == "Color24Bit")
-						Flags |= NCommandLine::EAnsiEncodingFlag_Color24Bit;
-					else if (Setting == "ColorLightBackground")
-						Flags |= NCommandLine::EAnsiEncodingFlag_ColorLightBackground;
-					else if (Setting == "BoxDrawing")
-						Flags |= NCommandLine::EAnsiEncodingFlag_BoxDrawing;
-					else if (Setting == "ColorSgrUsesSemiColon")
-						Flags |= NCommandLine::EAnsiEncodingFlag_ColorSgrUsesSemiColon;
-				}
-			}
-
-			return Flags;
-		}
-
-		CAnsiLoggerConfig(NStr::CStr const &_SettingsName, NCommandLine::EAnsiEncodingFlag _DefaultColor, bool _bTrace)
-			: m_AnsiLogger(fs_GetAnsiFlags(_SettingsName, _DefaultColor), fs_GetSeveritiesFilter(_SettingsName), _bTrace)
-		{
-		}
+		static ESeverity fs_GetSeveritiesFilter(NStr::CStr const &_SettingsName);
+		static NCommandLine::EAnsiEncodingFlag fs_GetAnsiFlags(NStr::CStr const &_SettingsName, NCommandLine::EAnsiEncodingFlag _DefaultColor);
 
 		CLogToStdErrAnsi m_AnsiLogger;
 	};
 
+	ESeverity CAnsiLoggerConfig::fs_GetSeveritiesFilter(NStr::CStr const &_SettingsName)
+	{
+		using namespace NStr;
+
+		ESeverity LogSeverities = ESeverity_All;
+		auto CustomSeverities = fg_GetSys()->f_GetEnvironmentVariable("{}Severities"_f << _SettingsName, "");
+		if (CustomSeverities)
+		{
+			LogSeverities = ESeverity_None;
+			for (auto &SeverityName : CustomSeverities.f_Split(","))
+				LogSeverities |= fg_LookupSeverity(SeverityName.f_Trim());
+		}
+
+		return LogSeverities;
+	}
+
+	NCommandLine::EAnsiEncodingFlag CAnsiLoggerConfig::fs_GetAnsiFlags(NStr::CStr const &_SettingsName, NCommandLine::EAnsiEncodingFlag _DefaultColor)
+	{
+		using namespace NStr;
+
+		NCommandLine::EAnsiEncodingFlag Flags = _DefaultColor;
+		auto LogSettings = fg_GetSys()->f_GetEnvironmentVariable("{}Color"_f << _SettingsName, {});
+		if (LogSettings == "true")
+			Flags = NCommandLine::EAnsiEncodingFlag_Color | NCommandLine::EAnsiEncodingFlag_Color24Bit | NCommandLine::EAnsiEncodingFlag_BoxDrawing;
+		else if (LogSettings != "false")
+		{
+			for (auto &Setting : LogSettings.f_Split(","))
+			{
+				if (Setting == "Color")
+					Flags |= NCommandLine::EAnsiEncodingFlag_Color;
+				else if (Setting == "Color24Bit")
+					Flags |= NCommandLine::EAnsiEncodingFlag_Color24Bit;
+				else if (Setting == "ColorLightBackground")
+					Flags |= NCommandLine::EAnsiEncodingFlag_ColorLightBackground;
+				else if (Setting == "BoxDrawing")
+					Flags |= NCommandLine::EAnsiEncodingFlag_BoxDrawing;
+				else if (Setting == "ColorSgrUsesSemiColon")
+					Flags |= NCommandLine::EAnsiEncodingFlag_ColorSgrUsesSemiColon;
+			}
+		}
+
+		return Flags;
+	}
+
+	CAnsiLoggerConfig::CAnsiLoggerConfig(NStr::CStr const &_SettingsName, NCommandLine::EAnsiEncodingFlag _DefaultColor, bool _bTrace)
+		: m_AnsiLogger(fs_GetAnsiFlags(_SettingsName, _DefaultColor), fs_GetSeveritiesFilter(_SettingsName), _bTrace)
+	{
+	}
+
 	struct CAnsiLoggerConfig_StdErr : public CAnsiLoggerConfig
 	{
-		CAnsiLoggerConfig_StdErr()
-			: CAnsiLoggerConfig(NStr::gc_Str<"MalterlibStdErrLog">, NCommandLine::CCommandLineDefaults::fs_ColorAnsiFlagsDefault(), false)
-		{
-		}
+		CAnsiLoggerConfig_StdErr();
 	};
+
+	CAnsiLoggerConfig_StdErr::CAnsiLoggerConfig_StdErr()
+		: CAnsiLoggerConfig(NStr::gc_Str<"MalterlibStdErrLog">, NCommandLine::CCommandLineDefaults::fs_ColorAnsiFlagsDefault(), false)
+	{
+	}
 
 	constinit static NStorage::TCAggregate<CAnsiLoggerConfig_StdErr> gs_AnsiLogger_StdErr = {DAggregateInit};
 
 	struct CAnsiLoggerConfig_Trace : public CAnsiLoggerConfig
 	{
-		CAnsiLoggerConfig_Trace()
-			: CAnsiLoggerConfig(NStr::gc_Str<"MalterlibTraceLog">, NCommandLine::CCommandLineDefaults::fs_ColorAnsiFlagsDefault(), true)
-		{
-		}
+		CAnsiLoggerConfig_Trace();
 	};
+
+	CAnsiLoggerConfig_Trace::CAnsiLoggerConfig_Trace()
+		: CAnsiLoggerConfig(NStr::gc_Str<"MalterlibTraceLog">, NCommandLine::CCommandLineDefaults::fs_ColorAnsiFlagsDefault(), true)
+	{
+	}
 
 	constinit static NStorage::TCAggregate<CAnsiLoggerConfig_Trace> gs_AnsiLogger_Trace = {DAggregateInit};
 
@@ -979,11 +988,13 @@ namespace NMib::NLog
 
 	struct CAnsiLoggerConfig_File : public CAnsiLoggerConfig
 	{
-		CAnsiLoggerConfig_File()
-			: CAnsiLoggerConfig(NStr::gc_Str<"MalterlibFileLog">, NCommandLine::EAnsiEncodingFlag_None, false)
-		{
-		}
+		CAnsiLoggerConfig_File();
 	};
+
+	CAnsiLoggerConfig_File::CAnsiLoggerConfig_File()
+		: CAnsiLoggerConfig(NStr::gc_Str<"MalterlibFileLog">, NCommandLine::EAnsiEncodingFlag_None, false)
+	{
+	}
 
 	constinit static NStorage::TCAggregate<CAnsiLoggerConfig_File> gs_AnsiLogger_File = {DAggregateInit};
 
