@@ -242,6 +242,7 @@ namespace NMib::NLog
 		>
 	;
 
+	using FLogTextFilter = NFunction::TCFunctionMovable<CLogStr (CLogStr const &_Text)>;
 	using FLogDispatch = NFunction::TCFunctionMovable<void (NFunction::TCFunctionMovable<void ()> &&_fToDispatch)>;
 
 	struct CLogFilter
@@ -309,6 +310,8 @@ namespace NMib::NLog
 		void f_Log(CLogLocationTag _Loc, ESeverity _Sev, CLogStr const &_Str);
 
 		void f_SetDispatcher(FLogDispatch &&_fDispatcher);
+		void f_SetTextFilter(FLogTextFilter &&_fFilter);
+		CLogStr f_FilterText(CLogStr const &_Text);
 
 		// Internal
 		void f_Submit(ESeverity _Sev, CLogStr &&_Text);

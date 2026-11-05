@@ -246,6 +246,7 @@ namespace NMib::NLog
 		NContainer::TCVector<NStorage::TCUniquePointer<CLogFile>> m_ConfigLogFiles;
 
 		FLogDispatch m_fDispatcher;
+		FLogTextFilter m_fTextFilter;
 	};
 
 	CLogger::CLogger()
@@ -496,6 +497,24 @@ namespace NMib::NLog
 		mp_pDetails->m_fDispatcher = fg_Move(_fDispatcher);
 	}
 
+	/// Replaces every message's text before any destination sees it, such as to neutralize terminal controls in text from untrusted
+	/// sources. The filter runs on whichever thread logs, concurrently with itself, so it must not keep state.
+	void CLogger::f_SetTextFilter(FLogTextFilter &&_fFilter)
+	{
+		DMibLock(mp_pDetails->m_GlobalDestLock);
+		mp_pDetails->m_fTextFilter = fg_Move(_fFilter);
+	}
+
+	/// _Text with the text filter applied, for text that reaches a destination without going through the logger
+	CLogStr CLogger::f_FilterText(CLogStr const &_Text)
+	{
+		DMibLockRead(mp_pDetails->m_GlobalDestLock);
+		if (!mp_pDetails->m_fTextFilter)
+			return _Text;
+
+		return mp_pDetails->m_fTextFilter(_Text);
+	}
+
 	void CLogger::f_Log(CLogLocationTag _Loc, ESeverity _Sev, CLogStr const &_Text)
 	{
 		NTime::CTime LogTime = NTime::CTime::fs_NowUTC();
@@ -506,26 +525,28 @@ namespace NMib::NLog
 
 		auto &ThreadInfo = *Details.m_ThreadInfo;
 
+		CLogStr const *pText = &_Text;
+
 		auto fSendToDests = [&](auto &_Container, auto const &_Categories, auto const &_Operations)
 			{
 				for (auto &pDestination : _Container)
 				{
 					auto &Destination = *pDestination;
-					if (Destination.m_Filter.f_Test(ThreadID, LogTime, _Sev, _Text, _Categories, _Operations, _Loc))
+					if (Destination.m_Filter.f_Test(ThreadID, LogTime, _Sev, *pText, _Categories, _Operations, _Loc))
 					{
 						if (Details.m_fDispatcher && Destination.m_bUseDispatcher)
 						{
 							Details.m_fDispatcher
 								(
-									[pDestination, ThreadID, LogTime, _Sev, _Text, _Categories, _Operations, _Loc]() mutable
+									[pDestination, ThreadID, LogTime, _Sev, Text = *pText, _Categories, _Operations, _Loc]() mutable
 									{
-										pDestination->m_fLog(ThreadID, LogTime, _Sev, _Text, _Categories, _Operations, _Loc);
+										pDestination->m_fLog(ThreadID, LogTime, _Sev, Text, _Categories, _Operations, _Loc);
 									}
 								)
 							;
 						}
 						else
-							Destination.m_fLog(ThreadID, LogTime, _Sev, _Text, _Categories, _Operations, _Loc);
+							Destination.m_fLog(ThreadID, LogTime, _Sev, *pText, _Categories, _Operations, _Loc);
 					}
 				}
 			}
@@ -534,6 +555,13 @@ namespace NMib::NLog
 			DMibLockRead(Details.m_GlobalDestLock);
 			if (ThreadInfo.m_Destinations.f_IsEmpty() && Details.m_GlobalDestinations.f_IsEmpty())
 				return;
+
+			CLogStr Filtered;
+			if (Details.m_fTextFilter)
+			{
+				Filtered = Details.m_fTextFilter(_Text);
+				pText = &Filtered;
+			}
 
 			auto Cats = ThreadInfo.f_GetCategoryScopeStack();
 			auto Ops = ThreadInfo.f_GetOperationScopeStack();
